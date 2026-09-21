@@ -72,6 +72,8 @@ model Community {
   houses          House[]
   familyCards     FamilyCard[]
   citizens        Citizen[]
+  letterTemplates LetterTemplate[]
+  letterRequests  LetterRequest[]
 
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
@@ -242,4 +244,65 @@ model Citizen {
   updatedAt       DateTime      @updatedAt
 
   @@map("citizens")
+}
+
+model LetterTemplate {
+  id               String          @id @default(cuid())
+  communityId      String
+  community        Community       @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  title            String
+  code             String
+  description      String?
+  category         String          @default("UMUM")
+  requiredDocs     String[]        @default([])
+  components       Json            @default("[]")
+  approvalWorkflow Json            @default("{\"requireSecretary\": false, \"requireRT\": true}")
+  isActive         Boolean         @default(true)
+
+  requests         LetterRequest[]
+
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@map("letter_templates")
+}
+
+model LetterRequest {
+  id                 String          @id @default(cuid())
+  communityId        String
+  community          Community       @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  templateId         String?
+  template           LetterTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  requestNumber      String
+  issuedNumber       String?
+
+  applicantName      String
+  applicantNik       String
+  applicantPhone     String
+  applicantAddress   String
+  purpose            String
+
+  extraData          Json?           @default("{}")
+  attachments        String[]        @default([])
+
+  status             String          @default("WAITING_SIGNATURE")
+
+  applicantSignature String?
+  applicantSignedAt  DateTime?
+
+  secretaryReview    Json?
+  rtSignature        String?
+  rtSignedBy         String?
+  rtSignedAt         DateTime?
+
+  rejectionReason    String?
+  issuedAt           DateTime?
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@map("letter_requests")
 }

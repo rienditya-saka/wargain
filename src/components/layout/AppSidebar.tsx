@@ -90,7 +90,7 @@ export function AppSidebar({
     {
       id: "surat",
       label: "Layanan Surat RT",
-      href: "/dashboard",
+      href: "/surat",
       icon: FileText,
       badge: "3 Baru",
       badgeVariant: "outline",
