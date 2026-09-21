@@ -1,0 +1,24 @@
+services:
+  paddle-ocr:
+    build:
+      context: ./services/paddle-ocr
+      dockerfile: Dockerfile
+    image: wargain-paddle-ocr:latest
+    container_name: wargain_paddle_ocr
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    volumes:
+      - paddle_models:/root/.paddleocr
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  paddle_models:
+    driver: local

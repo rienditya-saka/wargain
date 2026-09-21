@@ -1,0 +1,157 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum SubscriptionStatus {
+  PENDING_PAYMENT
+  WAITING_VERIFICATION
+  ACTIVE
+  EXPIRED
+}
+
+enum UserRole {
+  TENANT_ADMIN
+  KETUA
+  SEKRETARIS
+  BENDAHARA
+  HUMAS
+  ANGGOTA
+}
+
+enum PostType {
+  ANNOUNCEMENT
+  CITIZEN_REPORT
+  ACTIVITY_LOG
+}
+
+enum ReportStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum SubscriptionTierCode {
+  RT_STANDARD
+  RW_PRO
+  ENTERPRISE
+}
+
+model Community {
+  id              String               @id @default(cuid())
+  name            String
+  slug            String               @unique
+  code            String               @unique
+  type            String               @default("government") // "government" | "community"
+  country         String               @default("Indonesia")
+  province        String
+  regency         String
+  district        String
+  urban           String
+  neighborhood    String
+  address         String
+  lat             String               @default("-6.2088")
+  long            String               @default("106.8456")
+  logo            String?
+
+  // Langganan (Zero-Free Tier Gate)
+  planTier        SubscriptionTierCode @default(RT_STANDARD)
+  planStatus      SubscriptionStatus   @default(PENDING_PAYMENT)
+  isActive        Boolean              @default(false)
+  planExpiresAt   DateTime?
+
+  // Relasi
+  users           User[]
+  invoices        SubscriptionInvoice[]
+  posts           CommunityPost[]
+
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@map("communities")
+}
+
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  passwordHash    String
+  fullName        String
+  phone           String
+  role            UserRole       @default(TENANT_ADMIN)
+
+  communityId     String
+  community       Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  posts           CommunityPost[]
+  comments        PostComment[]
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@map("users")
+}
+
+model SubscriptionInvoice {
+  id              String               @id @default(cuid())
+  invoiceNumber   String               @unique
+  communityId     String
+  community       Community            @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  tier            SubscriptionTierCode @default(RT_STANDARD)
+  amount          Int
+  periodMonths    Int                  @default(1)
+  status          SubscriptionStatus   @default(PENDING_PAYMENT)
+
+  paymentMethod   String?              // "QRIS", "BCA_VA", "MANUAL_TRANSFER"
+  paymentProofUrl String?
+  paidAt          DateTime?
+
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@map("subscription_invoices")
+}
+
+model CommunityPost {
+  id           String        @id @default(cuid())
+  communityId  String
+  community    Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  authorId     String
+  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  type         PostType      @default(ANNOUNCEMENT)
+  title        String
+  content      String
+  attachments  String[]
+  isPinned     Boolean       @default(false)
+
+  // Aduan khusus
+  reportStatus ReportStatus? @default(OPEN)
+
+  comments     PostComment[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("community_posts")
+}
+
+model PostComment {
+  id        String        @id @default(cuid())
+  postId    String
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content   String
+  createdAt DateTime      @default(now())
+
+  @@map("post_comments")
+}
