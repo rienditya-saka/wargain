@@ -69,6 +69,9 @@ model Community {
   users           User[]
   invoices        SubscriptionInvoice[]
   posts           CommunityPost[]
+  houses          House[]
+  familyCards     FamilyCard[]
+  citizens        Citizen[]
 
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
@@ -154,4 +157,89 @@ model PostComment {
   createdAt DateTime      @default(now())
 
   @@map("post_comments")
+}
+
+model House {
+  id              String        @id @default(cuid())
+  communityId     String
+  community       Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  blockNumber     String
+  address         String
+  rtRw            String        @default("004/009")
+  occupancyStatus String        @default("DITEMPATI")
+  ownerName       String
+  ownerPhone      String        @default("081234567890")
+  ownerAddress    String?
+  currentKKId     String?
+  occupantName    String?
+  occupantPhone   String?
+  totalResidents  Int           @default(1)
+  lat             Float         @default(-6.2088)
+  lng             Float         @default(106.8456)
+  notes           String?
+
+  familyCards     FamilyCard[]
+  citizens        Citizen[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("houses")
+}
+
+model FamilyCard {
+  id              String        @id @default(cuid())
+  communityId     String
+  community       Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  houseId         String?
+  house           House?        @relation(fields: [houseId], references: [id], onDelete: SetNull)
+
+  noKK            String
+  headName        String
+  blockNumber     String?
+  address         String?
+  phone           String?       @default("081234567890")
+  residencyType   String        @default("TETAP")
+  socialCategory  String        @default("SEJAHTERA")
+  occupancyStatus String        @default("MILIK_SENDIRI")
+  lat             Float?        @default(-6.2088)
+  lng             Float?        @default(106.8456)
+
+  citizens        Citizen[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("family_cards")
+}
+
+model Citizen {
+  id              String        @id @default(cuid())
+  communityId     String
+  community       Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  familyCardId    String
+  familyCard      FamilyCard    @relation(fields: [familyCardId], references: [id], onDelete: Cascade)
+
+  houseId         String?
+  house           House?        @relation(fields: [houseId], references: [id], onDelete: SetNull)
+
+  nik             String
+  fullName        String
+  role            String        @default("ANGGOTA")
+  gender          String        @default("L")
+  age             Int           @default(0)
+  birthPlace      String?
+  birthDate       DateTime?
+  religion        String?
+  maritalStatus   String?       @default("BELUM KAWIN")
+  occupation      String?
+  phone           String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("citizens")
 }

@@ -582,7 +582,8 @@ export default function KependudukanPage() {
     setIsAddHouseModalOpen(true);
   };
 
-  const handleUpdateHouseLocation = (houseId: string, newCoords: { lat: number; lng: number }) => {
+  const handleUpdateHouseLocation = async (houseId: string, newCoords: { lat: number; lng: number }) => {
+    // Optimistic update
     setHouseData((prev) =>
       prev.map((h) =>
         h.id === houseId ? { ...h, lat: newCoords.lat, lng: newCoords.lng } : h
@@ -592,6 +593,21 @@ export default function KependudukanPage() {
     toast.success(`Posisi Unit ${house?.blockNumber || ""} berhasil dipindahkan!`, {
       description: `Koordinat baru: ${newCoords.lat.toFixed(5)}, ${newCoords.lng.toFixed(5)}`,
     });
+
+    // Supabase DB Sync
+    try {
+      await fetch("/api/kependudukan/houses", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: houseId,
+          lat: newCoords.lat,
+          lng: newCoords.lng,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to sync house location to Supabase:", err);
+    }
   };
 
   const handleMapClick = (coords: { lat: number; lng: number }) => {
@@ -607,10 +623,64 @@ export default function KependudukanPage() {
   };
 
   const [kkData, setKkData] = useState<KKRecord[]>(INITIAL_KK_DATA);
+  const [isLoadingDb, setIsLoadingDb] = useState(false);
+
+  const fetchKependudukanData = async (commId?: string) => {
+    try {
+      const targetCommId = commId || "comm_1789890597407";
+      setIsLoadingDb(true);
+      const res = await fetch(`/api/kependudukan?communityId=${encodeURIComponent(targetCommId)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data.houses && data.houses.length > 0) {
+        setHouseData(data.houses);
+      }
+
+      if (data.familyCards && data.familyCards.length > 0) {
+        const mappedKKs: KKRecord[] = data.familyCards.map((fc: any) => {
+          const members = (data.citizens || [])
+            .filter((c: any) => c.familyCardId === fc.id)
+            .map((c: any) => ({
+              id: c.id,
+              fullName: c.fullName,
+              nik: c.nik,
+              role: c.role,
+              gender: c.gender,
+              age: c.age,
+              maritalStatus: c.maritalStatus,
+              phone: c.phone,
+            }));
+
+          return {
+            id: fc.id,
+            noKK: fc.noKK,
+            headName: fc.headName,
+            blockNumber: fc.blockNumber || "",
+            address: fc.address || "",
+            phone: fc.phone || "081234567890",
+            residencyType: fc.residencyType || "TETAP",
+            socialCategory: fc.socialCategory || "SEJAHTERA",
+            occupancyStatus: fc.occupancyStatus || "MILIK_SENDIRI",
+            lat: fc.lat || -6.2088,
+            lng: fc.lng || 106.8456,
+            members,
+          };
+        });
+        setKkData(mappedKKs);
+      }
+    } catch (err) {
+      console.error("Error fetching live kependudukan data from Supabase:", err);
+    } finally {
+      setIsLoadingDb(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
-    setSession(getClientSession());
+    const clientSession = getClientSession();
+    setSession(clientSession);
+    fetchKependudukanData(clientSession?.communityId);
   }, []);
 
   const activeCommunityName = session?.communityName || "RT 04 / RW 09 Kemang Utama";
@@ -694,7 +764,7 @@ export default function KependudukanPage() {
     setExpandedKKs((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleSaveHouse = (e: React.FormEvent) => {
+  const handleSaveHouse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newHouseBlock.trim()) {
       toast.error("Nomor & Blok Rumah wajib diisi!");
@@ -710,15 +780,19 @@ export default function KependudukanPage() {
       ? kkData.find((k) => k.id === newHouseCurrentKKId)
       : undefined;
 
+    const blockVal = newHouseBlock.trim().toUpperCase();
+    const addressVal = newHouseAddress.trim() || `${blockVal} RT/RW ${newHouseRtRw}`;
+    const targetCommId = session?.communityId || "comm_1789890597407";
+
     if (editingHouseId) {
-      // UPDATE EXISTING
+      // Optimistic update
       setHouseData((prev) =>
         prev.map((h) => {
           if (h.id !== editingHouseId) return h;
           return {
             ...h,
-            blockNumber: newHouseBlock.trim().toUpperCase(),
-            address: newHouseAddress.trim() || `${newHouseBlock.trim().toUpperCase()} RT/RW ${newHouseRtRw}`,
+            blockNumber: blockVal,
+            address: addressVal,
             rtRw: newHouseRtRw.trim() || "004/009",
             occupancyStatus: newHouseStatus,
             ownerName: newHouseOwnerName.trim(),
@@ -740,7 +814,7 @@ export default function KependudukanPage() {
         setKkData((prev) =>
           prev.map((k) =>
             k.id === linkedKK.id
-              ? { ...k, blockNumber: newHouseBlock.trim().toUpperCase() }
+              ? { ...k, blockNumber: blockVal }
               : k
           )
         );
@@ -749,7 +823,36 @@ export default function KependudukanPage() {
       setIsAddHouseModalOpen(false);
       setPinnedLocation(null);
       setEditingHouseId(null);
-      toast.success(`Data Unit ${newHouseBlock.trim().toUpperCase()} berhasil diperbarui!`, {
+
+      // Sync to Supabase
+      try {
+        await fetch("/api/kependudukan/houses", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingHouseId,
+            communityId: targetCommId,
+            blockNumber: blockVal,
+            address: addressVal,
+            rtRw: newHouseRtRw.trim() || "004/009",
+            occupancyStatus: newHouseStatus,
+            ownerName: newHouseOwnerName.trim(),
+            ownerPhone: newHouseOwnerPhone.trim() || "081234567890",
+            ownerAddress: newHouseOwnerAddress.trim() || null,
+            currentKKId: isVacant ? null : (linkedKK ? linkedKK.id : null),
+            occupantName: isVacant ? null : (linkedKK ? linkedKK.headName : (newHouseOccupantName.trim() || newHouseOwnerName.trim())),
+            occupantPhone: isVacant ? null : (linkedKK ? linkedKK.phone : (newHouseOccupantPhone.trim() || newHouseOwnerPhone.trim())),
+            totalResidents: isVacant ? 0 : (linkedKK ? linkedKK.members.length : 1),
+            lat: newHouseLat,
+            lng: newHouseLng,
+            notes: newHouseNotes.trim() || null,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to update house in Supabase:", err);
+      }
+
+      toast.success(`Data Unit ${blockVal} berhasil diperbarui!`, {
         description: linkedKK ? `Terkoneksi ke KK: ${linkedKK.headName} (${linkedKK.members.length} Jiwa).` : undefined,
       });
       return;
@@ -758,8 +861,8 @@ export default function KependudukanPage() {
     // CREATE NEW
     const newRecord: HouseRecord = {
       id: `house-${Date.now()}`,
-      blockNumber: newHouseBlock.trim().toUpperCase(),
-      address: newHouseAddress.trim() || `${newHouseBlock.trim().toUpperCase()} RT/RW ${newHouseRtRw}`,
+      blockNumber: blockVal,
+      address: addressVal,
       rtRw: newHouseRtRw.trim() || "004/009",
       occupancyStatus: newHouseStatus,
       ownerName: newHouseOwnerName.trim(),
@@ -780,7 +883,7 @@ export default function KependudukanPage() {
       setKkData((prev) =>
         prev.map((k) =>
           k.id === linkedKK.id
-            ? { ...k, blockNumber: newHouseBlock.trim().toUpperCase() }
+            ? { ...k, blockNumber: blockVal }
             : k
         )
       );
@@ -790,12 +893,41 @@ export default function KependudukanPage() {
     setPinnedLocation(null);
     setIsPinningMode(false);
 
+    // Sync to Supabase
+    try {
+      await fetch("/api/kependudukan/houses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          communityId: targetCommId,
+          blockNumber: blockVal,
+          address: addressVal,
+          rtRw: newHouseRtRw.trim() || "004/009",
+          occupancyStatus: newHouseStatus,
+          ownerName: newHouseOwnerName.trim(),
+          ownerPhone: newHouseOwnerPhone.trim() || "081234567890",
+          ownerAddress: newHouseOwnerAddress.trim() || null,
+          currentKKId: isVacant ? null : (linkedKK ? linkedKK.id : null),
+          occupantName: isVacant ? null : (linkedKK ? linkedKK.headName : (newHouseOccupantName.trim() || newHouseOwnerName.trim())),
+          occupantPhone: isVacant ? null : (linkedKK ? linkedKK.phone : (newHouseOccupantPhone.trim() || newHouseOwnerPhone.trim())),
+          totalResidents: isVacant ? 0 : (linkedKK ? linkedKK.members.length : 1),
+          lat: newRecord.lat,
+          lng: newRecord.lng,
+          notes: newHouseNotes.trim() || null,
+        }),
+      });
+      // Refresh to keep IDs in sync
+      fetchKependudukanData(targetCommId);
+    } catch (err) {
+      console.error("Failed to insert house into Supabase:", err);
+    }
+
     toast.success(`Unit ${newRecord.blockNumber} berhasil didaftarkan!`, {
       description: isVacant ? "Status: Rumah Kosong." : linkedKK ? `Terkoneksi ke KK: ${linkedKK.headName} (${linkedKK.members.length} Jiwa).` : "Status: Dihuni.",
     });
   };
 
-  const handleRegisterNewKK = (e: React.FormEvent) => {
+  const handleRegisterNewKK = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newHeadName.trim() || !newHeadNik.trim() || !newNoKK.trim() || !newBlock.trim()) {
       toast.error("Mohon lengkapi Nama Kepala KK, NIK Kepala KK (16 digit), No KK, dan Blok Rumah.");
@@ -885,6 +1017,32 @@ export default function KependudukanPage() {
       setHouseData([newHouse, ...houseData]);
     }
 
+    const targetCommId = session?.communityId || "comm_1789890597407";
+
+    // Supabase DB Persistence
+    try {
+      await fetch("/api/kependudukan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          communityId: targetCommId,
+          noKK: newNoKK.trim(),
+          headName: newHeadName.trim(),
+          blockNumber: newBlock.trim().toUpperCase(),
+          address: finalAddress,
+          phone: newPhone.trim() || "081234567890",
+          residencyType: newResidency,
+          socialCategory: newSocial,
+          occupancyStatus: newResidency === "TETAP" ? "MILIK_SENDIRI" : "SEWA_KONTRAK",
+          members: membersToSave,
+        }),
+      });
+      // Refresh to keep IDs aligned with database
+      fetchKependudukanData(targetCommId);
+    } catch (err) {
+      console.error("Failed to persist KK to Supabase:", err);
+    }
+
     setNewHeadName("");
     setNewHeadNik("");
     setNewNoKK("");
@@ -895,7 +1053,7 @@ export default function KependudukanPage() {
     setExtractedMembers([]);
     setActiveTab("kk");
     toast.success(`Kartu Keluarga Bpk/Ibu ${newHeadName.trim()} berhasil didaftarkan!`, {
-      description: `Total ${membersToSave.length} anggota keluarga tersimpan di sistem RT.`,
+      description: `Total ${membersToSave.length} anggota keluarga tersimpan di sistem RT & Supabase.`,
     });
   };
 
