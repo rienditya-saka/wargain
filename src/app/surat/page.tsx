@@ -29,6 +29,7 @@ import {
   Check,
   RotateCcw,
   Share2,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,250 @@ export interface LetterRequestItem {
   template?: LetterTemplateItem;
 }
 
+// Rich fallback & standard templates for Feed view
+const DEFAULT_TEMPLATES: LetterTemplateItem[] = [
+  {
+    id: "tmpl_domisili",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Domisili Warga",
+    code: "SKD",
+    description: "Surat keterangan resmi yang menerangkan status domisili tempat tinggal warga di lingkungan RT/RW secara sah.",
+    category: "KEPENDUDUKAN",
+    requiredDocs: ["Fotokopi KTP Pemohon", "Fotokopi Kartu Keluarga (KK)"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_skck",
+    communityId: "comm_1789890597407",
+    title: "Surat Pengantar SKCK (Kepolisian)",
+    code: "SKCK",
+    description: "Surat pengantar RT untuk penerbitan Surat Keterangan Catatan Kepolisian (SKCK) di Polsek / Polres setempat.",
+    category: "LEGALITAS",
+    requiredDocs: ["KTP Pemohon", "Kartu Keluarga", "Pasfoto 4x6 (2 lembar)"],
+    components: [],
+    approvalWorkflow: { requireSecretary: true, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_sku",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Usaha (SKU)",
+    code: "SKU",
+    description: "Surat keterangan untuk pengajuan KUR, perbankan, atau legalitas usaha mikro/kecil warga di wilayah RT.",
+    category: "USAHA",
+    requiredDocs: ["KTP Pemohon", "Foto Tempat Usaha", "Bukti Kepemilikan Lahan/Sewa"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_sktm",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Tidak Mampu (SKTM)",
+    code: "SKTM",
+    description: "Surat keterangan untuk pengajuan beasiswa sekolah/kuliah, bantuan sosial, atau keringanan medis rumah sakit.",
+    category: "KEPENDUDUKAN",
+    requiredDocs: ["KTP Pemohon", "Kartu Keluarga", "Surat Pernyataan Berkelakuan Baik"],
+    components: [],
+    approvalWorkflow: { requireSecretary: true, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_nikah",
+    communityId: "comm_1789890597407",
+    title: "Surat Pengantar Nikah (Formulir N1-N4)",
+    code: "SPN",
+    description: "Surat pengantar resmi RT/RW untuk pengurusan pendaftaran pernikahan warga di Kelurahan & KUA setempat.",
+    category: "PERNIKAHAN",
+    requiredDocs: ["KTP Pemohon & Calon Pasangan", "Kartu Keluarga Kedua Pihak", "Akta Kelahiran & Pasfoto 2x3"],
+    components: [],
+    approvalWorkflow: { requireSecretary: true, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_pindah",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Pindah Masuk / Pindah Keluar",
+    code: "SKP",
+    description: "Surat pengantar perpindahan domisili warga keluar atau masuk ke lingkungan RT/RW untuk pengurusan Disdukcapil.",
+    category: "KEPENDUDUKAN",
+    requiredDocs: ["Kartu Keluarga (KK) Asli", "KTP-el Seluruh Anggota Pindah", "Surat Pengantar RT Asal"],
+    components: [],
+    approvalWorkflow: { requireSecretary: true, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_kehilangan",
+    communityId: "comm_1789890597407",
+    title: "Surat Pengantar Kehilangan Dokumen (Kepolisian)",
+    code: "SKH",
+    description: "Surat pengantar untuk laporan kehilangan KTP, KK, STNK, SIM, atau sertifikat ke Kepolisian setempat.",
+    category: "LEGALITAS",
+    requiredDocs: ["KTP / Identitas Diri", "Surat Pernyataan Kehilangan Bermaterai"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_kematian",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Kematian Warga",
+    code: "SKKM",
+    description: "Surat rujukan RT atas peristiwa meninggalnya warga untuk pengurusan Akta Kematian & Ahli Waris.",
+    category: "KEPENDUDUKAN",
+    requiredDocs: ["KTP & KK Almarhum/Almarhumah", "Surat Keterangan Dokter / RS", "KTP Pelapor/Ahli Waris"],
+    components: [],
+    approvalWorkflow: { requireSecretary: true, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_belum_menikah",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Belum Menikah / Lajang",
+    code: "SKBM",
+    description: "Surat keterangan status perjaka/gadis untuk persyaratan melamar kerja, pendaftaran CPNS/TNI/Polri, atau kredit properti.",
+    category: "PERNIKAHAN",
+    requiredDocs: ["KTP Pemohon", "Kartu Keluarga", "Surat Pernyataan Belum Menikah Bermaterai"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_gaji_ortu",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Penghasilan / Gaji Orang Tua",
+    code: "SKPO",
+    description: "Surat keterangan rincian estimasi pendapatan orang tua untuk persyaratan registrasi daftar ulang perguruan tinggi / UKT.",
+    category: "USAHA",
+    requiredDocs: ["KTP Orang Tua / Pemohon", "Kartu Keluarga", "Slip Gaji / Pernyataan Penghasilan"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_akta_lahir",
+    communityId: "comm_1789890597407",
+    title: "Surat Pengantar Penerbitan Akta Kelahiran Anak",
+    code: "SPAK",
+    description: "Surat pengantar RT untuk pembuatan Akta Kelahiran bayi/anak baru lahir di Dinas Kependudukan dan Catatan Sipil.",
+    category: "KEPENDUDUKAN",
+    requiredDocs: ["Surat Keterangan Lahir dari Bidan/RS", "Buku Nikah Orang Tua", "KK & KTP Orang Tua"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_kelakuan_baik",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Kelakuan Baik (SKKB) RT",
+    code: "SKKB",
+    description: "Surat rujukan warga berkelakuan baik di lingkungan RT/RW untuk keanggotaan organisasi, permit kerja, atau magang.",
+    category: "LEGALITAS",
+    requiredDocs: ["KTP Pemohon", "Kartu Keluarga"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_renovasi",
+    communityId: "comm_1789890597407",
+    title: "Surat Izin Renovasi / Pembangunan Rumah RT",
+    code: "SIRB",
+    description: "Surat permohonan izin lingkungan dan koordinasi jam kerja tukang/material bangunan dengan tetangga sekitarnya.",
+    category: "UMUM",
+    requiredDocs: ["KTP Pemilik Rumah", "Denah/Rencana Kerja Renovasi", "Surat Persetujuan Tetangga Kiri-Kanan"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_umum_acara",
+    communityId: "comm_1789890597407",
+    title: "Surat Pengantar Izin Acara & Keramaian Warga",
+    code: "SPIK",
+    description: "Surat rekomendasi & pemberitahuan pelaksanaan kegiatan syukuran, pernikahan, atau acara warga di lingkungan RT/RW.",
+    category: "UMUM",
+    requiredDocs: ["KTP Penanggung Jawab", "Rencana Rundown Acara"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_bebas_narkoba",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Kelakuan Baik & Bebas Narkoba",
+    code: "SKBN",
+    description: "Surat rujukan pengantar RT untuk pembuatan Surat Bebas Narkoba di RSUD / Badan Narkotika Nasional (BNN).",
+    category: "LEGALITAS",
+    requiredDocs: ["KTP Pemohon", "Kartu Keluarga"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_ktp_el",
+    communityId: "comm_1789890597407",
+    title: "Surat Pengantar Pembuatan / Perpanjangan KTP-el",
+    code: "SPKTP",
+    description: "Surat pengantar RT untuk pencetakan ulang KTP-el rusak, hilang, atau rekaman KTP baru di Kelurahan.",
+    category: "KEPENDUDUKAN",
+    requiredDocs: ["Kartu Keluarga (KK)", "KTP Lama (jika rusak) / Surat Kehilangan"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_kk_baru",
+    communityId: "comm_1789890597407",
+    title: "Surat Pengantar Perubahan / Pembuatan Kartu Keluarga",
+    code: "SPKK",
+    description: "Surat pengantar untuk penerbitan Kartu Keluarga (KK) baru akibat pemisahan KK, penambahan anggota, atau ubah status.",
+    category: "KEPENDUDUKAN",
+    requiredDocs: ["KK Asli Lama", "Buku Nikah / Akta Kelahiran Tambahan", "KTP Pemohon"],
+    components: [],
+    approvalWorkflow: { requireSecretary: true, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_domisili_usaha",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Domisili Usaha / Organisasi",
+    code: "SKDU",
+    description: "Surat keterangan lokasi alamat kantor, sekretariat, atau tempat usaha badan usaha/organisasi di wilayah RT.",
+    category: "USAHA",
+    requiredDocs: ["KTP Penanggung Jawab", "Akta Pendirian / Izin Lahan", "Foto Kantor/Tempat Usaha"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_janda_duda",
+    communityId: "comm_1789890597407",
+    title: "Surat Keterangan Status Janda / Duda Warga",
+    code: "SKJD",
+    description: "Surat keterangan resmi status janda/duda warga untuk keperluan pengurusan pensiun, klaim asuransi, atau pernikahan.",
+    category: "PERNIKAHAN",
+    requiredDocs: ["KTP Pemohon", "Kartu Keluarga", "Akta Cerai / Akta Kematian Pasangan"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+  {
+    id: "tmpl_tutup_jalan",
+    communityId: "comm_1789890597407",
+    title: "Surat Pengantar Izin Penutupan Jalan Sementara",
+    code: "SPPJ",
+    description: "Surat persetujuan lingkungan untuk penutupan jalan / pengalihan arus lalu lintas sementara pada acara hajatan.",
+    category: "UMUM",
+    requiredDocs: ["KTP Penanggung Jawab", "Denah Pengalihan Arus Jalan", "Persetujuan Tetangga Sekitar"],
+    components: [],
+    approvalWorkflow: { requireSecretary: false, requireRT: true },
+    isActive: true,
+  },
+];
+
 export default function SuratPage() {
   const [mounted, setMounted] = useState(false);
   const [session, setSession] = useState<any>(null);
@@ -104,6 +349,12 @@ export default function SuratPage() {
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<LetterTemplateItem | null>(null);
   const [isCustomUploadMode, setIsCustomUploadMode] = useState(false);
+
+  // Live Template Preview modal state
+  const [previewingTemplate, setPreviewingTemplate] = useState<LetterTemplateItem | null>(null);
+
+  // Category Filter for Template Feed
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("ALL");
 
   // Applicant fields
   const [applicantName, setApplicantName] = useState("");
@@ -132,7 +383,6 @@ export default function SuratPage() {
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState("ALL");
   const [filterStatus, setFilterStatus] = useState("ALL");
 
   const activeCommunityId = session?.communityId || "comm_1789890597407";
@@ -181,7 +431,7 @@ export default function SuratPage() {
   const handleOpenApply = (tmpl: LetterTemplateItem | null = null, customUpload = false) => {
     setSelectedTemplate(tmpl);
     setIsCustomUploadMode(customUpload);
-    // Autofill from session if available
+    setPreviewingTemplate(null);
     setApplicantName(session?.fullName || "Bpk. Bambang Sujatmiko");
     setApplicantNik("3174051204890001");
     setApplicantPhone(session?.phone || "081234567890");
@@ -305,6 +555,33 @@ export default function SuratPage() {
     }
   };
 
+  // Templates to display in Feed: Merge DEFAULT_TEMPLATES with Supabase templates so all 20+ templates are always accessible
+  const displayedTemplates = useMemo(() => {
+    const combinedMap = new Map<string, LetterTemplateItem>();
+
+    // 1. Add all 20 rich default templates
+    DEFAULT_TEMPLATES.forEach((tmpl) => {
+      combinedMap.set(tmpl.code || tmpl.id, tmpl);
+    });
+
+    // 2. Add/Override with custom templates from database
+    templates.forEach((tmpl) => {
+      combinedMap.set(tmpl.code || tmpl.id, tmpl);
+    });
+
+    const fullList = Array.from(combinedMap.values());
+
+    return fullList.filter((tmpl) => {
+      const matchCategory =
+        selectedCategoryFilter === "ALL" ||
+        tmpl.category?.toUpperCase() === selectedCategoryFilter.toUpperCase();
+      const matchSearch =
+        tmpl.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (tmpl.description && tmpl.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchCategory && matchSearch;
+    });
+  }, [templates, selectedCategoryFilter, searchQuery]);
+
   // Filtered requests
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {
@@ -327,7 +604,7 @@ export default function SuratPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-28 md:pb-12 font-sans selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-28 md:pb-12 font-sans selection:bg-emerald-500 selection:text-white overflow-x-hidden">
       {/* 1. TOP HEADER */}
       <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 py-2.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
@@ -366,451 +643,740 @@ export default function SuratPage() {
         </div>
       </header>
 
-      {/* Mobile Drawer */}
-      <AppSidebar
-        session={session}
-        isMobileDrawerOpen={isMobileDrawerOpen}
-        onCloseMobileDrawer={() => setIsMobileDrawerOpen(false)}
-      />
+      {/* 2. MAIN CONTENT LAYOUT CONTAINER (PROPER FLEX WITH SIDEBAR) */}
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 md:py-6">
+        <div className="flex flex-col md:flex-row lg:gap-6 items-start">
+          
+          {/* REUSABLE GLOBAL APP SIDEBAR */}
+          <AppSidebar
+            session={session}
+            isMobileDrawerOpen={isMobileDrawerOpen}
+            onCloseMobileDrawer={() => setIsMobileDrawerOpen(false)}
+          />
 
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
-        {/* Banner */}
-        <div className="bg-gradient-to-r from-emerald-950 via-teal-900/30 to-slate-900 border border-emerald-500/30 rounded-3xl p-5 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl relative overflow-hidden">
-          <div className="space-y-1.5 relative z-10">
-            <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5" /> Penerbitan Surat Resmi & Tanda Tangan Digital
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              Portal Layanan Surat Pengantar RT
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
-              Warga dapat mengajukan permohonan surat pengantar secara instan dari ponsel dengan tanda tangan digital resmi, terverifikasi QR code & stempel RT.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5 relative z-10 w-full sm:w-auto">
-            <Button
-              onClick={() => handleOpenApply(null, false)}
-              className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl gap-2 shadow-lg shadow-emerald-600/20 min-h-[44px]"
-            >
-              <Plus className="w-4 h-4" /> Ajukan Surat Baru
-            </Button>
-            {isPengurus && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setEditingTemplate(null);
-                  setIsBuilderOpen(true);
-                }}
-                className="flex-1 sm:flex-none border-border rounded-xl gap-2 hover:bg-muted/80 min-h-[44px]"
-              >
-                <PenTool className="w-4 h-4 text-emerald-600" /> Document Builder
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* 2. RESPONSIVE TAB BAR (Mobile First) */}
-        <div className="flex border-b border-border overflow-x-auto no-scrollbar gap-2 pb-1">
-          <button
-            onClick={() => {
-              setActiveTab("AJUKAN");
-              setIsBuilderOpen(false);
-            }}
-            className={`min-h-[44px] px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2 whitespace-nowrap transition-all ${
-              activeTab === "AJUKAN" && !isBuilderOpen
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
+          {/* MAIN SURAT CONTENT AREA WITH SMOOTH ENTRANCE ANIMATION */}
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            className="flex-1 w-full space-y-5 min-w-0"
           >
-            <FileText className="w-4 h-4" /> Pilih Template Surat ({templates.length})
-          </button>
+            {/* Banner with Motion Glow */}
+            <div className="bg-gradient-to-br from-emerald-950 via-teal-900/40 to-slate-900 border border-emerald-500/30 rounded-3xl p-5 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-2xl relative overflow-hidden">
+              {/* Glow Accent */}
+              <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <button
-            onClick={() => {
-              setActiveTab("APPROVAL");
-              setIsBuilderOpen(false);
-            }}
-            className={`min-h-[44px] px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2 whitespace-nowrap transition-all ${
-              activeTab === "APPROVAL" && !isBuilderOpen
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
-          >
-            <UserCheck className="w-4 h-4" /> Antrean Approval
-            {pendingApprovalsCount > 0 && (
-              <span className="bg-amber-500 text-slate-900 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold">
-                {pendingApprovalsCount}
-              </span>
-            )}
-          </button>
-
-          {isPengurus && (
-            <button
-              onClick={() => {
-                setActiveTab("BUILDER");
-                setIsBuilderOpen(true);
-              }}
-              className={`min-h-[44px] px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2 whitespace-nowrap transition-all ${
-                activeTab === "BUILDER" || isBuilderOpen
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              <PenTool className="w-4 h-4" /> Kelola Template (Builder)
-            </button>
-          )}
-
-          <button
-            onClick={() => {
-              setActiveTab("ARSIP");
-              setIsBuilderOpen(false);
-            }}
-            className={`min-h-[44px] px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2 whitespace-nowrap transition-all ${
-              activeTab === "ARSIP" && !isBuilderOpen
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4" /> Riwayat & Arsip ({requests.length})
-          </button>
-        </div>
-
-        {/* 3. TAB 1: PILIH TEMPLATE SURAT (SISI WARGA - FIRST MOBILE) */}
-        {activeTab === "AJUKAN" && !isBuilderOpen && (
-          <div className="space-y-6">
-            {/* Opsi Upload Mandiri vs Template Resmi */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card
-                onClick={() => handleOpenApply(null, true)}
-                className="cursor-pointer border-dashed border-2 border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all rounded-2xl p-5 flex items-center gap-4 group min-h-[44px]"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <Upload className="w-6 h-6" />
+              <div className="space-y-2 relative z-10">
+                <div className="inline-flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Penerbitan Surat Resmi & Tanda Tangan Digital
                 </div>
-                <div>
-                  <h3 className="text-sm font-extrabold text-foreground group-hover:text-emerald-600">
-                    Upload Dokumen Mandiri
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Sudah memiliki formulir / format surat khusus? Upload berkas PDF/Foto lalu beri tanda tangan digital.
-                  </p>
-                </div>
-              </Card>
-
-              <Card className="border-border bg-card/60 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
-                  <Stamp className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-extrabold text-foreground">
-                    Verifikasi Stempel RT & QR Code
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Seluruh surat diterbitkan lengkap dengan Nomor Registrasi Kelurahan, TTD Ketua RT, dan verifikasi QR.
-                  </p>
-                </div>
-              </Card>
-            </div>
-
-            {/* Template Grid */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-emerald-600" /> Pilihan Template Surat Standar RT/RW
-                </h2>
-                <span className="text-xs text-muted-foreground">Pilih jenis surat yang ingin diajukan</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {templates.map((tmpl) => (
-                  <Card
-                    key={tmpl.id}
-                    className="rounded-2xl border-border hover:border-emerald-500/40 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group bg-card"
-                  >
-                    <CardHeader className="p-4 sm:p-5 pb-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <Badge variant="outline" className="text-[10px] uppercase font-mono bg-muted">
-                          {tmpl.category}
-                        </Badge>
-                        <div className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Siap Diajukan
-                        </div>
-                      </div>
-                      <CardTitle className="text-base font-extrabold text-foreground tracking-tight mt-2 group-hover:text-emerald-600 transition-colors">
-                        {tmpl.title}
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                        {tmpl.description}
-                      </p>
-                    </CardHeader>
-
-                    <CardContent className="p-4 sm:p-5 pt-0 space-y-3">
-                      {tmpl.requiredDocs && tmpl.requiredDocs.length > 0 && (
-                        <div className="p-2.5 rounded-xl bg-muted/40 border border-border/50 text-[11px] space-y-1">
-                          <span className="font-semibold text-foreground block">Berkas Persyaratan:</span>
-                          <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
-                            {tmpl.requiredDocs.slice(0, 2).map((doc, i) => (
-                              <li key={i} className="truncate">{doc}</li>
-                            ))}
-                            {tmpl.requiredDocs.length > 2 && (
-                              <li className="text-emerald-600 font-medium">+{tmpl.requiredDocs.length - 2} berkas lainnya</li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-2 pt-1">
-                        <Button
-                          onClick={() => handleOpenApply(tmpl, false)}
-                          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs min-h-[44px] gap-1.5 shadow-sm"
-                        >
-                          Ajukan Surat Ini <ChevronRight className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 4. TAB 2: ANTREAN PERSETUJUAN & TTD (KHUSUS PENGURUS RT) */}
-        {activeTab === "APPROVAL" && !isBuilderOpen && (
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border">
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <div className="relative flex-1 sm:w-64">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cari NIK / Nama Pemohon..."
-                    className="pl-9 h-9 text-xs bg-background rounded-xl"
-                  />
-                </div>
-
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="h-9 px-3 rounded-xl border border-border bg-background text-xs"
-                >
-                  <option value="ALL">Semua Status</option>
-                  <option value="WAITING_SIGNATURE">Menunggu TTD Ketua RT</option>
-                  <option value="PENDING_REVIEW">Menunggu Verifikasi Sekretaris</option>
-                  <option value="APPROVED">Sudah Terbit (Approved)</option>
-                  <option value="REJECTED">Ditolak</option>
-                </select>
-              </div>
-
-              <div className="text-xs text-muted-foreground font-medium">
-                Total: <strong>{filteredRequests.length}</strong> Pengajuan
-              </div>
-            </div>
-
-            {filteredRequests.length === 0 ? (
-              <Card className="rounded-2xl p-12 text-center border-border">
-                <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
-                <h3 className="text-sm font-bold text-foreground">Tidak Ada Permohonan Surat</h3>
-                <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                  Belum ada permohonan surat warga yang cocok dengan filter atau status saat ini.
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
+                  Portal Layanan Surat Pengantar RT
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                  Ajukan permohonan surat pengantar instan dari ponsel dengan tanda tangan digital resmi, verifikasi QR Code & stempel RT otomatis.
                 </p>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredRequests.map((req) => (
-                  <Card
-                    key={req.id}
-                    className="rounded-2xl border-border hover:border-emerald-500/40 transition-all p-4 sm:p-5 flex flex-col justify-between space-y-4 bg-card"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="text-[10px] font-mono text-muted-foreground">
-                            {req.requestNumber}
-                          </span>
-                          <h3 className="text-base font-extrabold text-foreground tracking-tight">
-                            {req.template?.title || "Surat Permohonan Warga"}
-                          </h3>
-                        </div>
+              </div>
 
-                        <Badge
-                          variant="outline"
-                          className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                            req.status === "APPROVED"
-                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
-                              : req.status === "WAITING_SIGNATURE"
-                              ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
-                              : req.status === "REJECTED"
-                              ? "bg-rose-500/10 text-rose-600 border-rose-500/30"
-                              : "bg-blue-500/10 text-blue-600 border-blue-500/30"
+              <div className="flex flex-wrap items-center gap-2.5 relative z-10 w-full sm:w-auto">
+                <Button
+                  onClick={() => handleOpenApply(null, false)}
+                  className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl gap-2 shadow-lg shadow-emerald-600/30 min-h-[44px] transition-all hover:scale-[1.02] active:scale-95"
+                >
+                  <Plus className="w-4 h-4" /> Ajukan Surat Baru
+                </Button>
+                
+                {/* Document Builder Button (Desktop Only: hidden md:inline-flex) */}
+                {isPengurus && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setEditingTemplate(null);
+                      setIsBuilderOpen(true);
+                      setActiveTab("BUILDER");
+                    }}
+                    className="hidden md:inline-flex border-slate-700 bg-slate-900/60 text-slate-200 hover:text-white rounded-xl gap-2 hover:bg-slate-800 min-h-[44px] transition-all"
+                  >
+                    <PenTool className="w-4 h-4 text-emerald-400" /> Document Builder
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* DESKTOP TAB BAR (Hidden on Mobile, Floating Bottom Nav handles Mobile) */}
+            <div className="hidden md:flex border-b border-border gap-2 pb-1">
+              <button
+                onClick={() => {
+                  setActiveTab("AJUKAN");
+                  setIsBuilderOpen(false);
+                }}
+                className={`min-h-[44px] px-5 py-2.5 text-xs font-bold rounded-xl flex items-center gap-2 transition-all ${
+                  activeTab === "AJUKAN" && !isBuilderOpen
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                <FileText className="w-4 h-4" /> Feed Template Surat ({displayedTemplates.length})
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab("APPROVAL");
+                  setIsBuilderOpen(false);
+                }}
+                className={`min-h-[44px] px-5 py-2.5 text-xs font-bold rounded-xl flex items-center gap-2 transition-all ${
+                  activeTab === "APPROVAL" && !isBuilderOpen
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                <UserCheck className="w-4 h-4" /> Antrean Approval
+                {pendingApprovalsCount > 0 && (
+                  <span className="bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full text-[10px] font-extrabold shadow-sm">
+                    {pendingApprovalsCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Builder Tab strictly Desktop Only */}
+              {isPengurus && (
+                <button
+                  onClick={() => {
+                    setActiveTab("BUILDER");
+                    setIsBuilderOpen(true);
+                  }}
+                  className={`hidden md:inline-flex min-h-[44px] px-5 py-2.5 text-xs font-bold rounded-xl items-center gap-2 transition-all ${
+                    activeTab === "BUILDER" || isBuilderOpen
+                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-[1.02]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <PenTool className="w-4 h-4" /> Kelola Template (Builder)
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  setActiveTab("ARSIP");
+                  setIsBuilderOpen(false);
+                }}
+                className={`min-h-[44px] px-5 py-2.5 text-xs font-bold rounded-xl flex items-center gap-2 transition-all ${
+                  activeTab === "ARSIP" && !isBuilderOpen
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" /> Riwayat & Arsip ({requests.length})
+              </button>
+            </div>
+
+            {/* TAB CONTENT VIEWS WITH ANIMATED TRANSITION */}
+            <AnimatePresence mode="wait">
+              {/* TAB 1: FEED TEMPLATE SURAT */}
+              {activeTab === "AJUKAN" && !isBuilderOpen && (
+                <motion.div
+                  key="tab-ajukan"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="space-y-6"
+                >
+                  {/* Mandiri Upload & Security Callouts */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Card
+                      onClick={() => handleOpenApply(null, true)}
+                      className="cursor-pointer border-dashed border-2 border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all rounded-2xl p-5 flex items-center gap-4 group min-h-[44px] shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-inner">
+                        <Upload className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-extrabold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 flex items-center gap-1.5">
+                          Upload Dokumen Mandiri <ChevronRight className="w-4 h-4 text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Memiliki formulir / format berkas khusus? Upload PDF/Foto lalu bubuhkan TTD digital RT secara instan.
+                        </p>
+                      </div>
+                    </Card>
+
+                    <Card className="border-border bg-card/70 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-inner">
+                        <Stamp className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-extrabold text-foreground">
+                          Verifikasi Stempel RT & QR Code Valid
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Dokumen resmi lengkap dengan Nomor Surat Kelurahan, TTD Ketua RT, dan verifikasi QR Code keamanan anti pemalsuan.
+                        </p>
+                      </div>
+                    </Card>
+                  </div>
+
+                  {/* FEED CATEGORY FILTER BAR & SEARCH */}
+                  <div className="space-y-4 pt-2">
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                      <div>
+                        <h2 className="text-base font-extrabold text-foreground flex items-center gap-2">
+                          <Layers className="w-4 h-4 text-emerald-600" /> Catalog Feed Template Dokumen
+                        </h2>
+                        <p className="text-xs text-muted-foreground">
+                          Pilih jenis surat di bawah untuk pratinjau format atau langsung ajukan secara online.
+                        </p>
+                      </div>
+
+                      <div className="relative w-full md:w-72">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Cari nama template surat..."
+                          className="pl-9 h-10 text-xs bg-background rounded-xl border-border"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Category Filter Pills */}
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                      {[
+                        { id: "ALL", label: "Semua Template" },
+                        { id: "KEPENDUDUKAN", label: "Kependudukan" },
+                        { id: "LEGALITAS", label: "Legalitas & SKCK" },
+                        { id: "USAHA", label: "Ekonomi & Usaha" },
+                        { id: "PERNIKAHAN", label: "Pernikahan" },
+                        { id: "UMUM", label: "Izin & Umum" },
+                      ].map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => setSelectedCategoryFilter(cat.id)}
+                          className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition-all ${
+                            selectedCategoryFilter === cat.id
+                              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                              : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
                           }`}
                         >
-                          {req.status === "APPROVED" && "✓ Selesai Terbit"}
-                          {req.status === "WAITING_SIGNATURE" && "⏳ Butuh TTD Ketua RT"}
-                          {req.status === "PENDING_REVIEW" && "🔍 Verifikasi Sekretaris"}
-                          {req.status === "REJECTED" && "✕ Ditolak"}
-                        </Badge>
-                      </div>
-
-                      {/* Detail Warga */}
-                      <div className="p-3 rounded-xl bg-muted/40 border border-border/60 text-xs space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Pemohon:</span>
-                          <span className="font-bold text-foreground">{req.applicantName}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">NIK:</span>
-                          <span className="font-mono text-foreground">{req.applicantNik}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Keperluan:</span>
-                          <span className="text-foreground text-right max-w-[200px] truncate">{req.purpose}</span>
-                        </div>
-                      </div>
-
-                      {/* Status Tanda Tangan */}
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
-                        <span className="flex items-center gap-1">
-                          {req.applicantSignature ? (
-                            <span className="text-emerald-600 flex items-center gap-1 font-medium">
-                              ✓ TTD Pemohon Ada
-                            </span>
-                          ) : (
-                            <span className="text-amber-500">Belum TTD</span>
-                          )}
-                        </span>
-                        <span>Diajukan: {new Date(req.createdAt).toLocaleDateString("id-ID")}</span>
-                      </div>
+                          {cat.label}
+                        </button>
+                      ))}
                     </div>
+                  </div>
 
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-2 pt-2 border-t border-border/60">
-                      {req.status === "APPROVED" ? (
-                        <Button
-                          variant="outline"
-                          onClick={() => setSelectedRequestForPrint(req)}
-                          className="w-full text-xs font-bold rounded-xl gap-1.5 min-h-[44px]"
-                        >
-                          <Printer className="w-4 h-4 text-emerald-600" /> Lihat & Cetak Surat
-                        </Button>
-                      ) : (
-                        <>
-                          <Button
-                            onClick={() => {
-                              setSelectedRequestForApproval(req);
-                              setIsSigningRT(false);
-                            }}
-                            className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl gap-1.5 min-h-[44px] shadow-sm"
-                          >
-                            <PenTool className="w-3.5 h-3.5" /> Periksa & Tanda Tangani
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            onClick={() => {
-                              setSelectedRequestForApproval(req);
-                              setIsRejecting(true);
-                            }}
-                            className="text-xs text-rose-500 hover:text-rose-600 min-h-[44px]"
-                          >
-                            Tolak
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                  {/* TEMPLATE FEED GRID WITH VISUAL PREVIEW THUMBNAILS & STAGGER ANIMATION */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {displayedTemplates.map((tmpl, idx) => (
+                      <motion.div
+                        key={tmpl.id}
+                        initial={{ opacity: 0, y: 25 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: idx * 0.06 }}
+                      >
+                        <Card className="rounded-2xl border-border hover:border-emerald-500/50 hover:shadow-xl transition-all flex flex-col justify-between overflow-hidden group bg-card h-full">
+                          {/* Visual Live Document Preview Box (Feed Style) */}
+                          <div className="relative h-44 bg-gradient-to-b from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-950 p-3 flex items-center justify-center border-b border-border/60 overflow-hidden">
+                            {/* Mini Realistic Paper Visual */}
+                            <div className="w-[85%] h-[92%] bg-white text-slate-900 rounded-lg shadow-md p-2.5 flex flex-col justify-between text-[7px] font-serif border border-slate-300 relative transform transition-transform group-hover:scale-[1.03]">
+                              {/* Header Lines */}
+                              <div className="text-center font-sans space-y-0.5 border-b border-slate-900 pb-1">
+                                <p className="font-extrabold uppercase text-[6px] tracking-tight text-slate-950">
+                                  PENGURUS RT 04 / RW 09 KEMANG UTAMA
+                                </p>
+                                <p className="text-[5px] text-slate-600 uppercase">KELURAHAN MEKAR, JAKARTA SELATAN</p>
+                              </div>
 
-        {/* 5. TAB 3: KELOLA TEMPLATE (DOCUMENT BUILDER) */}
-        {activeTab === "BUILDER" && isBuilderOpen && (
-          <DocumentBuilder
-            initialTemplate={editingTemplate}
-            communityId={activeCommunityId}
-            communityName={activeCommunityName}
-            onSaveSuccess={() => {
-              fetchData();
-              setIsBuilderOpen(false);
-              setActiveTab("AJUKAN");
-            }}
-            onClose={() => {
-              setIsBuilderOpen(false);
-              setActiveTab("AJUKAN");
-            }}
-          />
-        )}
+                              {/* Title & Body Placeholders */}
+                              <div className="space-y-1.5 my-auto text-center font-sans">
+                                <p className="font-bold underline text-[7px] text-emerald-800 uppercase tracking-wider">
+                                  {tmpl.title}
+                                </p>
+                                <div className="space-y-1 px-2 opacity-65">
+                                  <div className="h-1 bg-slate-300 rounded w-full" />
+                                  <div className="h-1 bg-slate-300 rounded w-[85%] mx-auto" />
+                                  <div className="h-1 bg-slate-300 rounded w-[70%] mx-auto" />
+                                </div>
+                              </div>
 
-        {/* 6. TAB 4: ARSIP & RIWAYAT SURAT TERBIT */}
-        {activeTab === "ARSIP" && !isBuilderOpen && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" /> Arsip Surat Keluar RT Resmi
-              </h2>
-              <span className="text-xs text-muted-foreground">Surat yang telah disetujui & ditandatangani</span>
-            </div>
+                              {/* Mini Stamp & QR Simulation */}
+                              <div className="flex items-end justify-between font-sans pt-1 border-t border-slate-200">
+                                <div className="flex items-center gap-1">
+                                  <div className="w-4 h-4 bg-emerald-100 text-emerald-700 rounded flex items-center justify-center font-bold text-[6px]">
+                                    QR
+                                  </div>
+                                  <span className="text-[5px] text-slate-500 font-mono">VERIFIED</span>
+                                </div>
+                                {/* Stamp graphic */}
+                                <div className="w-5 h-5 rounded-full border border-red-500/70 text-red-600 flex items-center justify-center text-[4px] font-bold rotate-[-12deg] bg-red-50/20">
+                                  SEAL
+                                </div>
+                              </div>
+                            </div>
 
-            <div className="space-y-3">
-              {requests.filter((r) => r.status === "APPROVED").length === 0 ? (
-                <Card className="rounded-2xl p-12 text-center border-border">
-                  <ShieldCheck className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
-                  <h3 className="text-sm font-bold text-foreground">Belum Ada Surat yang Terbit</h3>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                    Surat yang telah ditandatangani oleh Ketua RT akan otomatis terarsip dan dapat dicetak di sini.
-                  </p>
-                </Card>
-              ) : (
-                requests
-                  .filter((r) => r.status === "APPROVED")
-                  .map((req) => (
-                    <div
-                      key={req.id}
-                      className="p-4 rounded-2xl bg-card border border-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-bold text-emerald-600">
-                              {req.issuedNumber || req.requestNumber}
-                            </span>
-                            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
-                              Terverifikasi QR
-                            </Badge>
+                            {/* Hover Overlay Button */}
+                            <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => setPreviewingTemplate(tmpl)}
+                                className="bg-white text-slate-900 font-bold text-xs rounded-xl shadow-lg gap-1.5 hover:bg-slate-100"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-emerald-600" /> Pratinjau Format Dokumen
+                              </Button>
+                            </div>
                           </div>
-                          <h4 className="text-sm font-extrabold text-foreground mt-0.5">
-                            {req.template?.title || "Surat Keterangan RT"}
-                          </h4>
-                          <p className="text-xs text-muted-foreground">
-                            Pemohon: <strong>{req.applicantName}</strong> (NIK: {req.applicantNik}) • {req.purpose}
-                          </p>
-                        </div>
+
+                          <CardHeader className="p-4 sm:p-5 pb-2 space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <Badge variant="outline" className="text-[10px] uppercase font-mono bg-muted/80 text-muted-foreground">
+                                {tmpl.category}
+                              </Badge>
+                              <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                                <Clock className="w-3 h-3" /> Instan 1-2 Jam
+                              </div>
+                            </div>
+
+                            <CardTitle className="text-base font-extrabold text-foreground tracking-tight group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                              {tmpl.title}
+                            </CardTitle>
+
+                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                              {tmpl.description}
+                            </p>
+                          </CardHeader>
+
+                          <CardContent className="p-4 sm:p-5 pt-0 space-y-3">
+                            {tmpl.requiredDocs && tmpl.requiredDocs.length > 0 && (
+                              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/50 text-[11px] space-y-1">
+                                <span className="font-semibold text-foreground block">Persyaratan Berkas:</span>
+                                <ul className="list-disc list-inside text-muted-foreground space-y-0.5">
+                                  {tmpl.requiredDocs.slice(0, 2).map((doc, i) => (
+                                    <li key={i} className="truncate">{doc}</li>
+                                  ))}
+                                  {tmpl.requiredDocs.length > 2 && (
+                                    <li className="text-emerald-600 font-medium">+{tmpl.requiredDocs.length - 2} berkas lainnya</li>
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-2 pt-1">
+                              <Button
+                                variant="outline"
+                                onClick={() => setPreviewingTemplate(tmpl)}
+                                className="border-border text-xs font-semibold rounded-xl min-h-[44px] gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-slate-500" /> Pratinjau
+                              </Button>
+
+                              <Button
+                                onClick={() => handleOpenApply(tmpl, false)}
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs min-h-[44px] gap-1 shadow-sm"
+                              >
+                                Ajukan <ChevronRight className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* TAB 2: ANTREAN PERSETUJUAN & TTD */}
+              {activeTab === "APPROVAL" && !isBuilderOpen && (
+                <motion.div
+                  key="tab-approval"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="space-y-4"
+                >
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border shadow-sm">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <div className="relative flex-1 sm:w-64">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Cari NIK / Nama Pemohon..."
+                          className="pl-9 h-9 text-xs bg-background rounded-xl"
+                        />
                       </div>
 
-                      <div className="flex items-center gap-2 self-end sm:self-auto">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedRequestForPrint(req)}
-                          className="rounded-xl text-xs min-h-[44px] gap-1.5"
-                        >
-                          <Printer className="w-4 h-4 text-emerald-600" /> Cetak / PDF
-                        </Button>
-                      </div>
+                      <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="h-9 px-3 rounded-xl border border-border bg-background text-xs"
+                      >
+                        <option value="ALL">Semua Status</option>
+                        <option value="WAITING_SIGNATURE">Menunggu TTD Ketua RT</option>
+                        <option value="PENDING_REVIEW">Menunggu Verifikasi Sekretaris</option>
+                        <option value="APPROVED">Sudah Terbit (Approved)</option>
+                        <option value="REJECTED">Ditolak</option>
+                      </select>
                     </div>
-                  ))
+
+                    <div className="text-xs text-muted-foreground font-medium">
+                      Total: <strong>{filteredRequests.length}</strong> Pengajuan
+                    </div>
+                  </div>
+
+                  {filteredRequests.length === 0 ? (
+                    <Card className="rounded-2xl p-12 text-center border-border">
+                      <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
+                      <h3 className="text-sm font-bold text-foreground">Tidak Ada Permohonan Surat</h3>
+                      <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                        Belum ada permohonan surat warga yang cocok dengan filter atau status saat ini.
+                      </p>
+                    </Card>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {filteredRequests.map((req, i) => (
+                        <motion.div
+                          key={req.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: i * 0.05 }}
+                        >
+                          <Card className="rounded-2xl border-border hover:border-emerald-500/40 transition-all p-4 sm:p-5 flex flex-col justify-between space-y-4 bg-card h-full">
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <span className="text-[10px] font-mono text-muted-foreground">
+                                    {req.requestNumber}
+                                  </span>
+                                  <h3 className="text-base font-extrabold text-foreground tracking-tight">
+                                    {req.template?.title || "Surat Permohonan Warga"}
+                                  </h3>
+                                </div>
+
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                                    req.status === "APPROVED"
+                                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                                      : req.status === "WAITING_SIGNATURE"
+                                      ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
+                                      : req.status === "REJECTED"
+                                      ? "bg-rose-500/10 text-rose-600 border-rose-500/30"
+                                      : "bg-blue-500/10 text-blue-600 border-blue-500/30"
+                                  }`}
+                                >
+                                  {req.status === "APPROVED" && "✓ Selesai Terbit"}
+                                  {req.status === "WAITING_SIGNATURE" && "⏳ Butuh TTD Ketua RT"}
+                                  {req.status === "PENDING_REVIEW" && "🔍 Verifikasi Sekretaris"}
+                                  {req.status === "REJECTED" && "✕ Ditolak"}
+                                </Badge>
+                              </div>
+
+                              {/* Detail Warga */}
+                              <div className="p-3 rounded-xl bg-muted/40 border border-border/60 text-xs space-y-1">
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Pemohon:</span>
+                                  <span className="font-bold text-foreground">{req.applicantName}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">NIK:</span>
+                                  <span className="font-mono text-foreground">{req.applicantNik}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Keperluan:</span>
+                                  <span className="text-foreground text-right max-w-[200px] truncate">{req.purpose}</span>
+                                </div>
+                              </div>
+
+                              {/* Status Tanda Tangan */}
+                              <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
+                                <span className="flex items-center gap-1">
+                                  {req.applicantSignature ? (
+                                    <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                                      ✓ TTD Pemohon Ada
+                                    </span>
+                                  ) : (
+                                    <span className="text-amber-500">Belum TTD</span>
+                                  )}
+                                </span>
+                                <span>Diajukan: {new Date(req.createdAt).toLocaleDateString("id-ID")}</span>
+                              </div>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-2 pt-2 border-t border-border/60">
+                              {req.status === "APPROVED" ? (
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setSelectedRequestForPrint(req)}
+                                  className="w-full text-xs font-bold rounded-xl gap-1.5 min-h-[44px]"
+                                >
+                                  <Printer className="w-4 h-4 text-emerald-600" /> Lihat & Cetak Surat
+                                </Button>
+                              ) : (
+                                <>
+                                  <Button
+                                    onClick={() => {
+                                      setSelectedRequestForApproval(req);
+                                      setIsSigningRT(false);
+                                    }}
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl gap-1.5 min-h-[44px] shadow-sm"
+                                  >
+                                    <PenTool className="w-3.5 h-3.5" /> Periksa & TTD
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setSelectedRequestForApproval(req);
+                                      setIsRejecting(true);
+                                    }}
+                                    className="text-xs text-rose-500 hover:text-rose-600 min-h-[44px]"
+                                  >
+                                    Tolak
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
               )}
-            </div>
+
+              {/* TAB 3: KELOLA TEMPLATE (BUILDER - DESKTOP ONLY) */}
+              {activeTab === "BUILDER" && isBuilderOpen && (
+                <motion.div
+                  key="tab-builder"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                >
+                  <DocumentBuilder
+                    initialTemplate={editingTemplate}
+                    communityId={activeCommunityId}
+                    communityName={activeCommunityName}
+                    onSaveSuccess={() => {
+                      fetchData();
+                      setIsBuilderOpen(false);
+                      setActiveTab("AJUKAN");
+                    }}
+                    onClose={() => {
+                      setIsBuilderOpen(false);
+                      setActiveTab("AJUKAN");
+                    }}
+                  />
+                </motion.div>
+              )}
+
+              {/* TAB 4: ARSIP & RIWAYAT SURAT TERBIT */}
+              {activeTab === "ARSIP" && !isBuilderOpen && (
+                <motion.div
+                  key="tab-arsip"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" /> Arsip Surat Keluar RT Resmi
+                    </h2>
+                    <span className="text-xs text-muted-foreground">Surat yang telah disetujui & ditandatangani</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {requests.filter((r) => r.status === "APPROVED").length === 0 ? (
+                      <Card className="rounded-2xl p-12 text-center border-border">
+                        <ShieldCheck className="w-10 h-10 mx-auto text-muted-foreground mb-3 opacity-40" />
+                        <h3 className="text-sm font-bold text-foreground">Belum Ada Surat yang Terbit</h3>
+                        <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                          Surat yang telah ditandatangani oleh Ketua RT akan otomatis terarsip dan dapat dicetak di sini.
+                        </p>
+                      </Card>
+                    ) : (
+                      requests
+                        .filter((r) => r.status === "APPROVED")
+                        .map((req) => (
+                          <div
+                            key={req.id}
+                            className="p-4 rounded-2xl bg-card border border-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <FileText className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-xs font-bold text-emerald-600">
+                                    {req.issuedNumber || req.requestNumber}
+                                  </span>
+                                  <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                                    Terverifikasi QR
+                                  </Badge>
+                                </div>
+                                <h4 className="text-sm font-extrabold text-foreground mt-0.5">
+                                  {req.template?.title || "Surat Keterangan RT"}
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                  Pemohon: <strong>{req.applicantName}</strong> (NIK: {req.applicantNik}) • {req.purpose}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 self-end sm:self-auto">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedRequestForPrint(req)}
+                                className="rounded-xl text-xs min-h-[44px] gap-1.5"
+                              >
+                                <Printer className="w-4 h-4 text-emerald-600" /> Cetak / PDF
+                              </Button>
+                            </div>
+                          </div>
+                        ))
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.section>
+        </div>
+      </main>
+
+      {/* ======================================================== */}
+      {/* MODAL 0: LIVE TEMPLATE PREVIEW (PRATINJAU FORMAT SURAT) */}
+      {/* ======================================================== */}
+      <AnimatePresence>
+        {previewingTemplate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-2xl bg-white text-slate-900 rounded-3xl shadow-2xl p-6 sm:p-10 border border-neutral-200 font-serif leading-relaxed text-xs sm:text-sm space-y-6 relative my-auto max-h-[90vh] overflow-y-auto"
+            >
+              {/* Header Bar inside modal */}
+              <div className="flex items-center justify-between border-b pb-3 font-sans">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300 text-xs font-bold">
+                    <Eye className="w-3.5 h-3.5 mr-1" /> Pratinjau Format Dokumen
+                  </Badge>
+                  <span className="text-xs font-mono font-bold text-slate-500 uppercase">
+                    CODE: {previewingTemplate.code}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setPreviewingTemplate(null)}
+                  className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Sample A4 Document Layout */}
+              <div className="text-center space-y-1 font-sans">
+                <h3 className="font-extrabold text-sm sm:text-base tracking-wider uppercase text-slate-950">
+                  PENGURUS RUKUN TETANGGA 04 / RUKUN WARGA 09
+                </h3>
+                <h4 className="font-bold text-xs sm:text-sm uppercase text-slate-800">
+                  KELURAHAN MEKAR, KECAMATAN KEBAYORAN BARU, KOTA ADM. JAKARTA SELATAN
+                </h4>
+                <p className="text-[10px] sm:text-[11px] text-slate-600 italic">
+                  Sekretariat: Jl. Kemang Raya No. 04 Jakarta Selatan • WhatsApp: 0812-3456-7890
+                </p>
+                <div className="pt-2">
+                  <div className="border-b-2 border-slate-950 w-full mb-0.5" />
+                  <div className="border-b border-slate-950 w-full" />
+                </div>
+              </div>
+
+              {/* Title */}
+              <div className="text-center pt-2 font-sans">
+                <h2 className="font-bold text-sm sm:text-base underline underline-offset-4 tracking-wide uppercase text-slate-900">
+                  {previewingTemplate.title}
+                </h2>
+                <p className="text-xs font-mono text-slate-600 mt-1">
+                  Nomor: [NOMOR_REGISTRASI_OTOMATIS]/RT04/RW09/[BULAN]/[TAHUN]
+                </p>
+              </div>
+
+              {/* Body */}
+              <p className="text-justify text-xs text-slate-800">
+                Yang bertanda tangan di bawah ini Pengurus Rukun Tetangga 04 / Rukun Warga 09, Kelurahan Mekar, Kecamatan Kebayoran Baru, Jakarta Selatan, dengan ini menerangkan bahwa:
+              </p>
+
+              <div className="pl-4 sm:pl-6 space-y-1.5 text-xs font-sans text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div className="grid grid-cols-3">
+                  <span className="text-slate-500">Nama Lengkap</span>
+                  <span className="col-span-2 font-bold text-slate-900">: [NAMA_PEMOHON_WARGA]</span>
+                </div>
+                <div className="grid grid-cols-3">
+                  <span className="text-slate-500">NIK (KTP)</span>
+                  <span className="col-span-2 font-mono text-slate-900">: [NIK_PEMOHON_16_DIGIT]</span>
+                </div>
+                <div className="grid grid-cols-3">
+                  <span className="text-slate-500">Alamat Domisili</span>
+                  <span className="col-span-2 text-slate-900">: [ALAMAT_WARGA_RT04_RW09]</span>
+                </div>
+              </div>
+
+              <p className="text-justify text-xs text-slate-800">
+                Orang tersebut di atas adalah benar warga yang berdomisili di lingkungan kami. Surat pengantar ini diterbitkan sesuai permohonan warga untuk keperluan: <strong>[DESKRIPSI_KEPERLUAN_WARGA]</strong>.
+              </p>
+
+              {/* Stamp & Sig Preview */}
+              <div className="pt-4 grid grid-cols-2 text-center text-xs font-sans items-end">
+                <div className="space-y-2">
+                  <p className="text-slate-600">Pemohon,</p>
+                  <div className="h-14 flex items-center justify-center">
+                    <div className="text-[10px] text-slate-400 italic font-mono border-b border-dashed border-slate-300 pb-1">
+                      [Tanda Tangan Pemohon]
+                    </div>
+                  </div>
+                  <p className="font-bold underline uppercase text-slate-900">( [NAMA_WARGA] )</p>
+                </div>
+
+                <div className="space-y-2 relative">
+                  <div>
+                    <p className="text-slate-600">Jakarta, [TANGGAL_TERBIT]</p>
+                    <p className="font-bold text-slate-900">Ketua RT 04 / RW 09</p>
+                  </div>
+                  <div className="h-14 flex items-center justify-center relative">
+                    <div className="absolute -left-1 top-0 w-16 h-16 border border-dashed border-red-500/60 rounded-full flex flex-col items-center justify-center text-red-600 font-bold text-[7px] uppercase rotate-[-15deg] bg-red-50/20">
+                      <span>RT 04 / RW 09</span>
+                      <span>VERIFIED</span>
+                    </div>
+                    <div className="text-[10px] text-emerald-600 font-bold font-mono">
+                      ✓ TTD DIGITAL RT
+                    </div>
+                  </div>
+                  <p className="font-bold underline uppercase text-slate-900">( Bpk. H. Bambang Sujatmiko )</p>
+                </div>
+              </div>
+
+              {/* Footer CTA */}
+              <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 font-sans">
+                <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                  <QrCode className="w-5 h-5 text-slate-700" />
+                  <span>Format siap cetak A4 & verifikasi QR Code resmi</span>
+                </div>
+                <Button
+                  onClick={() => handleOpenApply(previewingTemplate, false)}
+                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs min-h-[44px] gap-2 shadow-lg shadow-emerald-600/20"
+                >
+                  <Plus className="w-4 h-4" /> Ajukan Surat Ini Sekarang
+                </Button>
+              </div>
+            </motion.div>
           </div>
         )}
-      </main>
+      </AnimatePresence>
 
       {/* ======================================================== */}
       {/* MODAL 1: PENGAJUAN SURAT WARGA (MOBILE FIRST) */}
@@ -924,7 +1490,7 @@ export default function SuratPage() {
                   </div>
                 )}
 
-                {/* Tanda Tangan Digital Pemohon (PandaDoc-Style) */}
+                {/* Tanda Tangan Digital Pemohon */}
                 <div className="space-y-2 pt-1 border-t border-border">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -1317,6 +1883,79 @@ export default function SuratPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* 3. EPIC FLOATING MOBILE BOTTOM NAVIGATION BAR (md:hidden) */}
+      <nav
+        className="fixed bottom-3 inset-x-3 sm:inset-x-6 z-40 md:hidden pointer-events-auto"
+        aria-label="Surat Mobile Navigation Bar"
+      >
+        <div className="bg-white/90 dark:bg-[#0B130E]/90 backdrop-blur-2xl border border-neutral-200/80 dark:border-emerald-500/30 rounded-2xl p-1.5 shadow-2xl flex items-center justify-around ring-1 ring-black/5 dark:ring-white/10">
+          {/* 1. Feed & Template Tab */}
+          <button
+            onClick={() => {
+              setActiveTab("AJUKAN");
+              setIsBuilderOpen(false);
+            }}
+            className={`relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200 ${
+              activeTab === "AJUKAN" && !isBuilderOpen
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/40 ring-1 ring-emerald-400/40 scale-105"
+                : "text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-95"
+            }`}
+            aria-label="Pilih Template Surat"
+            title="Feed Template Surat"
+          >
+            <FileText className="w-4 h-4" />
+            {activeTab === "AJUKAN" && !isBuilderOpen && (
+              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            )}
+          </button>
+
+          {/* 2. Antrean Approval Tab */}
+          <button
+            onClick={() => {
+              setActiveTab("APPROVAL");
+              setIsBuilderOpen(false);
+            }}
+            className={`relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200 ${
+              activeTab === "APPROVAL" && !isBuilderOpen
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/40 ring-1 ring-emerald-400/40 scale-105"
+                : "text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-95"
+            }`}
+            aria-label="Antrean Approval"
+            title="Antrean Approval"
+          >
+            <UserCheck className="w-4 h-4" />
+            {pendingApprovalsCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 font-extrabold text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
+                {pendingApprovalsCount}
+              </span>
+            )}
+            {activeTab === "APPROVAL" && !isBuilderOpen && (
+              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            )}
+          </button>
+
+          {/* 3. Riwayat & Arsip Tab */}
+          <button
+            onClick={() => {
+              setActiveTab("ARSIP");
+              setIsBuilderOpen(false);
+            }}
+            className={`relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200 ${
+              activeTab === "ARSIP" && !isBuilderOpen
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/40 ring-1 ring-emerald-400/40 scale-105"
+                : "text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-95"
+            }`}
+            aria-label="Riwayat & Arsip Surat"
+            title="Riwayat & Arsip Surat"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            {activeTab === "ARSIP" && !isBuilderOpen && (
+              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            )}
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }

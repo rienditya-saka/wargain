@@ -98,7 +98,7 @@ export function AppSidebar({
     {
       id: "kas",
       label: "Kas & Financial RT",
-      href: "/dashboard",
+      href: "/kas",
       icon: Wallet,
       badge: "85%",
     },
