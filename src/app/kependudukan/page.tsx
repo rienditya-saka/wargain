@@ -48,6 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { getClientSession } from "@/lib/auth-session";
 import { MappedHouse } from "@/components/ui/kependudukan-leaflet-map";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
@@ -1097,6 +1098,7 @@ export default function KependudukanPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <NotificationBell userId={session?.userId} />
             <ThemeToggle />
             <Button
               onClick={handleExportData}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { onBillPaid } from "@/lib/kas/hooks";
 
 export async function GET(req: Request) {
   try {
@@ -133,6 +134,8 @@ export async function PATCH(req: Request) {
         notes: `Pelunasan tagihan ${currentBill.billNumber} via ${paymentMethod}`,
         transactionDate: paidAt,
       });
+
+      await onBillPaid(updated);
 
       return NextResponse.json({ success: true, bill: updated });
     } else if (action === "CANCEL") {

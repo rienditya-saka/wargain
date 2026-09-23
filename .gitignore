@@ -40,3 +40,6 @@ supabase/.temp/
 
 # large media (root only)
 /*.mp4
+
+# generated login credentials (never commit)
+credentials/

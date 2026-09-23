@@ -58,6 +58,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Autocomplete } from "@/components/ui/autocomplete";
 import {
@@ -197,6 +198,21 @@ const EXPENSE_CATEGORY_OPTIONS = [
   { value: "SOSIAL", label: "Sosial / Kematian" },
 ];
 
+export const DEFAULT_COA_CODES: Record<string, string> = {
+  SALDO_AWAL: "100000",
+  IURAN_WARGA: "410101",
+  DONASI_WARGA: "410201",
+  SEWA_ASET: "410301",
+  PENDAPATAN_LAIN: "410401",
+  OPERASIONAL: "510101",
+  KEAMANAN: "510201",
+  KEBERSIHAN: "510301",
+  PEMELIHARAAN: "510401",
+  SOSIAL: "510501",
+  KEGIATAN_WARGA: "510601",
+  SALDO_BALANCE: "310101",
+};
+
 export default function KasFinancialPage() {
   const [mounted, setMounted] = useState(false);
   const [session, setSession] = useState<any>(null);
@@ -246,6 +262,7 @@ export default function KasFinancialPage() {
   const [summaryViewMode, setSummaryViewMode] = useState<"LEDGER" | "T_ACCOUNT">("LEDGER");
   const [expandedIncomeMethod, setExpandedIncomeMethod] = useState<string | null>("TUNAI");
   const [expandedExpenseCategory, setExpandedExpenseCategory] = useState<string | null>(null);
+  const [expandedIncomeCategory, setExpandedIncomeCategory] = useState<string | null>(null);
 
   // Category Management Modal State
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -783,11 +800,22 @@ export default function KasFinancialPage() {
     const transferPercent = totalIncome > 0 ? (transferAmount / totalIncome) * 100 : 0;
     const qrisPercent = totalIncome > 0 ? (qrisAmount / totalIncome) * 100 : 0;
 
-    // 5. Expense breakdown by post / category
-    const expenseGroupMap: Record<
+    // 5. Income breakdown by post (Sisi Kiri Neraca)
+    const defaultIncomeCats = [
+      { code: "IURAN_WARGA", name: "Iuran Rutin Warga (IPL)", description: "Iuran warga, kebersihan & keamanan", isSystem: true },
+      { code: "DONASI_WARGA", name: "Donasi & Sumbangan", description: "Sumbangan sukarela warga", isSystem: true },
+      { code: "SEWA_ASET", name: "Sewa Balai / Fasilitas", description: "Penyewaan aset & balai warga", isSystem: false },
+      { code: "PENDAPATAN_LAIN", name: "Pendapatan Kas Lain-lain", description: "Bunga bank dan penerimaan lain", isSystem: true },
+    ];
+
+    const registeredIncomeCats = categories.filter((c) => c.type === "INCOME");
+    const baseIncomeDefs = registeredIncomeCats.length > 0 ? registeredIncomeCats : defaultIncomeCats;
+
+    const incomeGroupMap: Record<
       string,
       {
         categoryCode: string;
+        code: string;
         name: string;
         description?: string;
         isSystem: boolean;
@@ -797,15 +825,97 @@ export default function KasFinancialPage() {
       }
     > = {};
 
+    baseIncomeDefs.forEach((cat, idx) => {
+      const coa = DEFAULT_COA_CODES[cat.code] || `410${String(idx + 1).padStart(2, "0")}1`;
+      incomeGroupMap[cat.code] = {
+        categoryCode: cat.code,
+        code: coa,
+        name: cat.name,
+        description: cat.description || undefined,
+        isSystem: cat.isSystem,
+        amount: 0,
+        count: 0,
+        items: [],
+      };
+    });
+
+    incomeRecords.forEach((r) => {
+      const catCode = r.category || "IURAN_WARGA";
+      if (!incomeGroupMap[catCode]) {
+        const catDef = categories.find((c) => c.code === catCode);
+        const nextIdx = Object.keys(incomeGroupMap).length + 1;
+        const coa = DEFAULT_COA_CODES[catCode] || `410${String(nextIdx).padStart(2, "0")}1`;
+        incomeGroupMap[catCode] = {
+          categoryCode: catCode,
+          code: coa,
+          name: catDef ? catDef.name : catCode.replace(/_/g, " "),
+          description: catDef?.description,
+          isSystem: catDef ? catDef.isSystem : false,
+          amount: 0,
+          count: 0,
+          items: [],
+        };
+      }
+      incomeGroupMap[catCode].amount += r.amount || 0;
+      incomeGroupMap[catCode].count += 1;
+      incomeGroupMap[catCode].items.push(r);
+    });
+
+    const incomeBreakdownByPost = Object.values(incomeGroupMap).sort((a, b) => a.code.localeCompare(b.code));
+
+    // 6. Expense breakdown by post (Sisi Kanan Neraca)
+    const defaultExpenseCats = [
+      { code: "OPERASIONAL", name: "Operasional RT", description: "ATK, cetak, konsumsi rapat pengurus", isSystem: true },
+      { code: "KEAMANAN", name: "Keamanan & Ronda", description: "Honor satpam, pos kamling, CCTV", isSystem: true },
+      { code: "KEBERSIHAN", name: "Kebersihan & Sampah", description: "Retribusi dinas kebersihan & petugas sampah", isSystem: true },
+      { code: "PEMELIHARAAN", name: "Pemeliharaan Fasilitas", description: "Perbaikan lampu jalan & fasilitas", isSystem: true },
+      { code: "SOSIAL", name: "Sosial & Kematian", description: "Santunan duka warga & bantuan sosial", isSystem: true },
+      { code: "KEGIATAN_WARGA", name: "Kegiatan Warga & PHBN", description: "Acara kemerdekaan, kerja bakti", isSystem: false },
+    ];
+
+    const registeredExpenseCats = categories.filter((c) => c.type === "EXPENSE");
+    const baseExpenseDefs = registeredExpenseCats.length > 0 ? registeredExpenseCats : defaultExpenseCats;
+
+    const expenseGroupMap: Record<
+      string,
+      {
+        categoryCode: string;
+        code: string;
+        name: string;
+        description?: string;
+        isSystem: boolean;
+        amount: number;
+        count: number;
+        items: FinancialRecordItem[];
+      }
+    > = {};
+
+    baseExpenseDefs.forEach((cat, idx) => {
+      const coa = DEFAULT_COA_CODES[cat.code] || `510${String(idx + 1).padStart(2, "0")}1`;
+      expenseGroupMap[cat.code] = {
+        categoryCode: cat.code,
+        code: coa,
+        name: cat.name,
+        description: cat.description || undefined,
+        isSystem: cat.isSystem,
+        amount: 0,
+        count: 0,
+        items: [],
+      };
+    });
+
     expenseRecords.forEach((r) => {
       const catCode = r.category || "OPERASIONAL";
       if (!expenseGroupMap[catCode]) {
         const catDef = categories.find((c) => c.code === catCode);
+        const nextIdx = Object.keys(expenseGroupMap).length + 1;
+        const coa = DEFAULT_COA_CODES[catCode] || `510${String(nextIdx).padStart(2, "0")}1`;
         expenseGroupMap[catCode] = {
           categoryCode: catCode,
+          code: coa,
           name: catDef ? catDef.name : catCode.replace(/_/g, " "),
           description: catDef?.description,
-          isSystem: catDef ? catDef.isSystem : true,
+          isSystem: catDef ? catDef.isSystem : false,
           amount: 0,
           count: 0,
           items: [],
@@ -816,7 +926,7 @@ export default function KasFinancialPage() {
       expenseGroupMap[catCode].items.push(r);
     });
 
-    const expenseGroupList = Object.values(expenseGroupMap).sort((a, b) => b.amount - a.amount);
+    const expenseBreakdownByPost = Object.values(expenseGroupMap).sort((a, b) => a.code.localeCompare(b.code));
 
     return {
       beginningBalance,
@@ -832,7 +942,9 @@ export default function KasFinancialPage() {
         transfer: { amount: transferAmount, percent: transferPercent, count: transferRecords.length, items: transferRecords },
         qris: { amount: qrisAmount, percent: qrisPercent, count: qrisRecords.length, items: qrisRecords },
       },
-      expenseBreakdown: expenseGroupList,
+      expenseBreakdown: expenseBreakdownByPost,
+      incomeBreakdownByPost,
+      expenseBreakdownByPost,
       totalTransactions: recordsInPeriod.length,
     };
   }, [financialRecords, summaryYear, summaryMonth, categories]);
@@ -914,6 +1026,7 @@ export default function KasFinancialPage() {
               <Wallet className="w-3 h-3 mr-1" /> Kas & Financial RT
             </Badge>
 
+            <NotificationBell userId={session?.userId} />
             <ThemeToggle />
           </div>
         </div>
@@ -1797,7 +1910,7 @@ export default function KasFinancialPage() {
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        <Scale className="w-3.5 h-3.5 text-blue-600" /> Ikhtisar Neraca Pos & Kanal Bayar
+                        <Scale className="w-3.5 h-3.5 text-blue-600" /> Ikhtisar Neraca Pos
                       </button>
                     </div>
 
@@ -2098,19 +2211,357 @@ export default function KasFinancialPage() {
                   )}
 
                   {/* ======================================================== */}
-                  {/* VIEW MODE 2: REKAPITULASI NERACA POS & KANAL BAYAR */}
+                  {/* VIEW MODE 2: IKHTISAR NERACA POS (T-ACCOUNT DUA KOLOM) */}
                   {/* ======================================================== */}
                   {summaryViewMode === "T_ACCOUNT" && (
                     <div className="space-y-6">
-                      {/* SECTION 1: BREAKDOWN PENDAPATAN (KAS, TRANSFER, QRIS) */}
-                      <div className="bg-card rounded-2xl border border-border p-5 space-y-4 shadow-sm">
+                      {/* STATUS BANNER REKONSILIASI NERACA */}
+                      <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs shadow-sm">
+                        <div className="flex items-center gap-3 text-foreground">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
+                            <Scale className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h5 className="font-extrabold text-xs text-foreground uppercase tracking-wider">
+                                Ikhtisar Neraca Pos Kas RT
+                              </h5>
+                              <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white font-black text-[10px] px-2 py-0">
+                                STATUS: BALANCE (SEIMBANG)
+                              </Badge>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              Total Sumber Kas (Rp {(summaryData.beginningBalance + summaryData.totalIncome).toLocaleString("id-ID")}) = Total Alokasi Kas (Rp {(summaryData.totalExpense + summaryData.endingBalance).toLocaleString("id-ID")}).
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0 self-end md:self-auto">
+                          <div className="text-right">
+                            <span className="text-[10px] text-muted-foreground block font-medium">Surplus / Defisit Periode Ini:</span>
+                            <span
+                              className={`font-mono font-black text-xs ${
+                                summaryData.netBalance >= 0
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : "text-rose-600 dark:text-rose-400"
+                              }`}
+                            >
+                              {summaryData.netBalance >= 0 ? "+" : "-"}Rp {Math.abs(summaryData.netBalance).toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* DUA KOLOM NERACA (T-ACCOUNT): KIRI PENDAPATAN, KANAN PENGELUARAN */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
+                        {/* ======================================================== */}
+                        {/* KOLOM KIRI: POS-POS PENDAPATAN & SALDO AWAL */}
+                        {/* ======================================================== */}
+                        <div className="bg-card rounded-2xl border border-border/80 shadow-sm overflow-hidden flex flex-col">
+                          {/* HEADER KIRI (Soft Tinted Banner persis gambar) */}
+                          <div className="bg-rose-50/70 dark:bg-rose-950/20 px-5 py-3.5 border-b border-rose-200/50 dark:border-rose-900/30 flex items-center justify-between">
+                            <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-foreground">
+                              PENDAPATAN / PENERIMAAN KAS
+                            </h4>
+                            <span className="font-mono font-black text-sm text-rose-600 dark:text-rose-400">
+                              Rp {(summaryData.beginningBalance + summaryData.totalIncome).toLocaleString("id-ID")}
+                            </span>
+                          </div>
+
+                          {/* BODY TABLE KIRI */}
+                          <div className="overflow-x-auto divide-y divide-border/40 text-xs">
+                            {/* BARIS PALING ATAS DI KIRI: SALDO BALANCE AKHIR DARI PERIODE SEBELUMNYA */}
+                            <div className="px-4 py-3 bg-muted/20 hover:bg-muted/30 transition-colors flex items-center justify-between gap-2 border-b border-border/70">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="font-mono text-[11px] text-muted-foreground w-16 sm:w-20 shrink-0 font-semibold">
+                                  100000
+                                </span>
+                                <div className="min-w-0">
+                                  <span className="font-bold text-foreground block truncate">
+                                    Saldo Akhir Periode Sebelumnya (Saldo Awal)
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground block truncate">
+                                    Posisi kas sebelum {summaryMonth === "ALL" ? `1 Jan ${summaryYear}` : `1 ${INDONESIAN_MONTHS.find((m) => m.value === summaryMonth)?.label} ${summaryYear}`}
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="font-mono font-black text-foreground shrink-0 text-right text-xs">
+                                Rp {summaryData.beginningBalance.toLocaleString("id-ID")}
+                              </span>
+                            </div>
+
+                            {/* ROWS POS-POS PENDAPATAN */}
+                            {summaryData.incomeBreakdownByPost.map((post) => {
+                              const isExpanded = expandedIncomeCategory === post.categoryCode;
+                              const hasItems = post.items.length > 0;
+                              return (
+                                <div key={post.categoryCode} className="transition-colors hover:bg-muted/20">
+                                  <div
+                                    onClick={() => hasItems && setExpandedIncomeCategory(isExpanded ? null : post.categoryCode)}
+                                    className={`px-4 py-3 flex items-center justify-between gap-2 ${
+                                      hasItems ? "cursor-pointer" : ""
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <span className="font-mono text-[11px] text-muted-foreground w-16 sm:w-20 shrink-0 font-medium">
+                                        {post.code}
+                                      </span>
+                                      <div className="min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span className="font-semibold text-foreground truncate">
+                                            {post.name}
+                                          </span>
+                                          {post.count > 0 && (
+                                            <Badge
+                                              variant="secondary"
+                                              className="text-[9px] px-1.5 py-0 bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                                            >
+                                              {post.count} tx
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        {post.description && (
+                                          <span className="text-[10px] text-muted-foreground block truncate">
+                                            {post.description}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <span
+                                        className={`font-mono font-bold text-right text-xs ${
+                                          post.amount > 0
+                                            ? "text-emerald-600 dark:text-emerald-400"
+                                            : "text-muted-foreground/70"
+                                        }`}
+                                      >
+                                        Rp {post.amount.toLocaleString("id-ID")}
+                                      </span>
+                                      {hasItems && (
+                                        isExpanded ? (
+                                          <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                                        ) : (
+                                          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                                        )
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Rincian Transaksi Accordion */}
+                                  <AnimatePresence>
+                                    {isExpanded && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="bg-muted/30 px-4 py-2 space-y-1.5 border-t border-border/40 text-[11px]"
+                                      >
+                                        {post.items.map((item) => (
+                                          <div
+                                            key={item.id}
+                                            className="p-2 rounded-lg bg-card border border-border/50 flex items-center justify-between gap-2"
+                                          >
+                                            <div className="truncate">
+                                              <p className="font-semibold text-foreground truncate">{item.title}</p>
+                                              <span className="text-[10px] text-muted-foreground">
+                                                {new Date(item.transactionDate).toLocaleDateString("id-ID", {
+                                                  day: "numeric",
+                                                  month: "short",
+                                                })}{" "}
+                                                • {item.paymentMethod || "TUNAI"} {item.notes ? `(${item.notes})` : ""}
+                                              </span>
+                                            </div>
+                                            <span className="font-mono font-bold text-emerald-600 shrink-0 text-xs">
+                                              +Rp {item.amount.toLocaleString("id-ID")}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* FOOTER KIRI: SUBTOTAL & TOTAL */}
+                          <div className="mt-auto border-t-2 border-border bg-muted/20 text-xs divide-y divide-border/60">
+                            <div className="px-4 py-2.5 flex items-center justify-between font-bold text-foreground">
+                              <span>Subtotal Pendapatan Periode Ini</span>
+                              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs">
+                                Rp {summaryData.totalIncome.toLocaleString("id-ID")}
+                              </span>
+                            </div>
+                            <div className="px-4 py-3 bg-rose-50/50 dark:bg-rose-950/30 flex items-center justify-between font-black uppercase text-foreground">
+                              <span className="text-[11px] sm:text-xs">TOTAL SUMBER KAS (SALDO AWAL + PENDAPATAN)</span>
+                              <span className="font-mono text-sm sm:text-base text-rose-600 dark:text-rose-400 font-extrabold underline decoration-double decoration-rose-500 underline-offset-4">
+                                Rp {(summaryData.beginningBalance + summaryData.totalIncome).toLocaleString("id-ID")}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ======================================================== */}
+                        {/* KOLOM KANAN: POS-POS PENGELUARAN & SALDO BALANCE */}
+                        {/* ======================================================== */}
+                        <div className="bg-card rounded-2xl border border-border/80 shadow-sm overflow-hidden flex flex-col">
+                          {/* HEADER KANAN (Soft Tinted Banner persis gambar) */}
+                          <div className="bg-rose-50/70 dark:bg-rose-950/20 px-5 py-3.5 border-b border-rose-200/50 dark:border-rose-900/30 flex items-center justify-between">
+                            <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-foreground">
+                              PENGELUARAN / BELANJA KAS
+                            </h4>
+                            <span className="font-mono font-black text-sm text-rose-600 dark:text-rose-400">
+                              Rp {summaryData.totalExpense.toLocaleString("id-ID")}
+                            </span>
+                          </div>
+
+                          {/* BODY TABLE KANAN */}
+                          <div className="overflow-x-auto divide-y divide-border/40 text-xs">
+                            {summaryData.expenseBreakdownByPost.map((post) => {
+                              const isExpanded = expandedExpenseCategory === post.categoryCode;
+                              const hasItems = post.items.length > 0;
+                              return (
+                                <div key={post.categoryCode} className="transition-colors hover:bg-muted/20">
+                                  <div
+                                    onClick={() => hasItems && setExpandedExpenseCategory(isExpanded ? null : post.categoryCode)}
+                                    className={`px-4 py-3 flex items-center justify-between gap-2 ${
+                                      hasItems ? "cursor-pointer" : ""
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <span className="font-mono text-[11px] text-muted-foreground w-16 sm:w-20 shrink-0 font-medium">
+                                        {post.code}
+                                      </span>
+                                      <div className="min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span className="font-semibold text-foreground truncate">
+                                            {post.name}
+                                          </span>
+                                          {post.count > 0 && (
+                                            <Badge
+                                              variant="secondary"
+                                              className="text-[9px] px-1.5 py-0 bg-rose-500/10 text-rose-600 border border-rose-500/20"
+                                            >
+                                              {post.count} tx
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        {post.description && (
+                                          <span className="text-[10px] text-muted-foreground block truncate">
+                                            {post.description}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <span
+                                        className={`font-mono font-bold text-right text-xs ${
+                                          post.amount > 0
+                                            ? "text-rose-600 dark:text-rose-400"
+                                            : "text-muted-foreground/70"
+                                        }`}
+                                      >
+                                        Rp {post.amount.toLocaleString("id-ID")}
+                                      </span>
+                                      {hasItems && (
+                                        isExpanded ? (
+                                          <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                                        ) : (
+                                          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                                        )
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Rincian Transaksi Accordion */}
+                                  <AnimatePresence>
+                                    {isExpanded && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="bg-muted/30 px-4 py-2 space-y-1.5 border-t border-border/40 text-[11px]"
+                                      >
+                                        {post.items.map((item) => (
+                                          <div
+                                            key={item.id}
+                                            className="p-2 rounded-lg bg-card border border-border/50 flex items-center justify-between gap-2"
+                                          >
+                                            <div className="truncate">
+                                              <p className="font-semibold text-foreground truncate">{item.title}</p>
+                                              <span className="text-[10px] text-muted-foreground">
+                                                {new Date(item.transactionDate).toLocaleDateString("id-ID", {
+                                                  day: "numeric",
+                                                  month: "short",
+                                                })}{" "}
+                                                • Pencatat: {item.recordedBy} {item.notes ? `(${item.notes})` : ""}
+                                              </span>
+                                            </div>
+                                            <span className="font-mono font-bold text-rose-600 shrink-0 text-xs">
+                                              -Rp {item.amount.toLocaleString("id-ID")}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* FOOTER KANAN: TOTAL PENGELUARAN, SALDO BALANCE, TOTAL ALOKASI */}
+                          <div className="mt-auto border-t-2 border-border bg-muted/20 text-xs divide-y divide-border/60">
+                            {/* SUBTOTAL PENGELUARAN */}
+                            <div className="px-4 py-2.5 flex items-center justify-between font-bold text-foreground">
+                              <span>Subtotal Pengeluaran</span>
+                              <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-xs">
+                                Rp {summaryData.totalExpense.toLocaleString("id-ID")}
+                              </span>
+                            </div>
+
+                            {/* SALDO BALANCE AKHIR */}
+                            <div className="px-4 py-3 bg-emerald-500/10 dark:bg-emerald-950/20 flex items-center justify-between font-extrabold text-foreground border-t border-emerald-500/20">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="font-mono text-[11px] text-emerald-700 dark:text-emerald-400 w-16 sm:w-20 shrink-0 font-bold">
+                                  310101
+                                </span>
+                                <div className="min-w-0">
+                                  <span className="text-emerald-800 dark:text-emerald-300 font-extrabold block truncate">
+                                    Saldo Balance Kas (Akhir Periode)
+                                  </span>
+                                  <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 block truncate">
+                                    Sisa saldo kas fisik & rekening berjalan
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-sm shrink-0">
+                                Rp {summaryData.endingBalance.toLocaleString("id-ID")}
+                              </span>
+                            </div>
+
+                            {/* TOTAL ALOKASI & PENYEIMBANG */}
+                            <div className="px-4 py-3 bg-rose-50/50 dark:bg-rose-950/30 flex items-center justify-between font-black uppercase text-foreground">
+                              <span className="text-[11px] sm:text-xs">TOTAL ALOKASI & PENYEIMBANG</span>
+                              <span className="font-mono text-sm sm:text-base text-rose-600 dark:text-rose-400 font-extrabold underline decoration-double decoration-rose-500 underline-offset-4">
+                                Rp {(summaryData.totalExpense + summaryData.endingBalance).toLocaleString("id-ID")}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* RINCIAN DISTRIBUSI KANAL BAYAR (KAS, TRANSFER, QRIS) */}
+                      <div className="bg-card rounded-2xl border border-border p-5 space-y-4 shadow-sm print-hide">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/70 pb-3">
                           <div>
-                            <h4 className="text-sm font-extrabold text-foreground flex items-center gap-1.5">
-                              <Wallet className="w-4 h-4 text-emerald-600" /> Rincian Penerimaan Kas (Berdasarkan Kanal Bayar)
+                            <h4 className="text-xs sm:text-sm font-extrabold text-foreground flex items-center gap-1.5">
+                              <Wallet className="w-4 h-4 text-emerald-600" /> Rincian Kanal Bayar Penerimaan (Kas Tunai, Transfer & QRIS)
                             </h4>
-                            <p className="text-xs text-muted-foreground">
-                              Klik kanal di bawah untuk melihat rincian riwayat transaksi per saluran bayar.
+                            <p className="text-[11px] text-muted-foreground">
+                              Distribusi saluran pembayaran dari penerimaan iuran dan donasi warga periode ini.
                             </p>
                           </div>
 
@@ -2362,142 +2813,6 @@ export default function KasFinancialPage() {
                             </AnimatePresence>
                           </div>
                         </div>
-                      </div>
-
-                      {/* SECTION 2: BREAKDOWN PENGELUARAN (BERDASARKAN POS-POS PENGELUARAN) */}
-                      <div className="bg-card rounded-2xl border border-border p-5 space-y-4 shadow-sm">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/70 pb-3">
-                          <div>
-                            <h4 className="text-sm font-extrabold text-foreground flex items-center gap-1.5">
-                              <BarChart3 className="w-4 h-4 text-rose-600" /> Rincian Pengeluaran (Berdasarkan Pos Anggaran)
-                            </h4>
-                            <p className="text-xs text-muted-foreground">
-                              Komposisi belanja operasional, gaji petugas, kebersihan, dan pemeliharaan lingkungan.
-                            </p>
-                          </div>
-
-                          <div className="text-right">
-                            <span className="text-xs font-bold text-muted-foreground">Total Pengeluaran:</span>
-                            <span className="text-sm font-black text-rose-600 dark:text-rose-400 ml-1.5 font-mono">
-                              Rp {summaryData.totalExpense.toLocaleString("id-ID")}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Expense Posts List */}
-                        {summaryData.expenseBreakdown.length === 0 ? (
-                          <div className="text-center py-8 text-xs text-muted-foreground">
-                            Belum ada pengeluaran kas yang tercatat pada periode ini.
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {summaryData.expenseBreakdown.map((group) => {
-                              const percent =
-                                summaryData.totalExpense > 0
-                                  ? (group.amount / summaryData.totalExpense) * 100
-                                  : 0;
-                              const isExpanded = expandedExpenseCategory === group.categoryCode;
-
-                              return (
-                                <div
-                                  key={group.categoryCode}
-                                  className="rounded-2xl border border-border bg-muted/10 overflow-hidden"
-                                >
-                                  <div
-                                    onClick={() =>
-                                      setExpandedExpenseCategory(isExpanded ? null : group.categoryCode)
-                                    }
-                                    className="p-4 cursor-pointer hover:bg-muted/30 transition-colors space-y-2"
-                                  >
-                                    <div className="flex items-center justify-between gap-3">
-                                      <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center shrink-0">
-                                          <TrendingDown className="w-4 h-4" />
-                                        </div>
-                                        <div>
-                                          <div className="flex items-center gap-2">
-                                            <h5 className="text-xs font-bold text-foreground">{group.name}</h5>
-                                            {group.isSystem ? (
-                                              <Badge variant="outline" className="text-[9px] bg-muted text-muted-foreground py-0 px-1.5">
-                                                Sistem
-                                              </Badge>
-                                            ) : (
-                                              <Badge variant="outline" className="text-[9px] bg-blue-500/10 text-blue-600 border-blue-500/30 py-0 px-1.5">
-                                                Kustom
-                                              </Badge>
-                                            )}
-                                          </div>
-                                          {group.description && (
-                                            <p className="text-[10px] text-muted-foreground">{group.description}</p>
-                                          )}
-                                        </div>
-                                      </div>
-
-                                      <div className="flex items-center gap-3">
-                                        <div className="text-right">
-                                          <span className="text-xs font-black font-mono text-rose-600 dark:text-rose-400 block">
-                                            Rp {group.amount.toLocaleString("id-ID")}
-                                          </span>
-                                          <span className="text-[10px] text-muted-foreground">
-                                            {percent.toFixed(1)}% • {group.count} item
-                                          </span>
-                                        </div>
-
-                                        {isExpanded ? (
-                                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                                        ) : (
-                                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* Progress Bar */}
-                                    <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                                      <div
-                                        className="bg-rose-500 h-full rounded-full transition-all duration-500"
-                                        style={{ width: `${percent}%` }}
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* Accordion Line Items */}
-                                  <AnimatePresence>
-                                    {isExpanded && (
-                                      <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        className="border-t border-border/60 bg-card p-3 space-y-2 text-xs"
-                                      >
-                                        {group.items.map((item) => (
-                                          <div
-                                            key={item.id}
-                                            className="p-2.5 rounded-xl bg-muted/20 border border-border/40 flex items-center justify-between gap-2"
-                                          >
-                                            <div className="truncate space-y-0.5">
-                                              <p className="font-semibold text-xs text-foreground truncate">{item.title}</p>
-                                              <p className="text-[10px] text-muted-foreground truncate">
-                                                {new Date(item.transactionDate).toLocaleDateString("id-ID", {
-                                                  day: "numeric",
-                                                  month: "short",
-                                                  year: "numeric",
-                                                })}{" "}
-                                                • Pencatat: {item.recordedBy} {item.notes ? `(${item.notes})` : ""}
-                                              </p>
-                                            </div>
-                                            <span className="font-bold font-mono text-rose-600 text-xs shrink-0">
-                                              -Rp {item.amount.toLocaleString("id-ID")}
-                                            </span>
-                                          </div>
-                                        ))}
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}

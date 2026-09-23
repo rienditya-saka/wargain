@@ -75,5 +75,8 @@ export interface SessionTenant {
   planTier: SubscriptionTierCode;
   planStatus: SubscriptionStatus;
   supabaseToken?: string;
+  // Link to the resident record (Kependudukan) when the account belongs to a warga.
+  citizenId?: string | null;
+  houseBlock?: string | null;
 }
 

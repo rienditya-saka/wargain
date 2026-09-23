@@ -49,6 +49,8 @@ export async function POST(req: Request) {
       planTier: metadata.planTier || "RT_STANDARD",
       planStatus: metadata.planStatus || (isMockActive ? "ACTIVE" : "PENDING_PAYMENT"),
       supabaseToken: data.session?.access_token,
+      citizenId: metadata.citizenId ?? null,
+      houseBlock: metadata.houseBlock ?? null,
     };
 
     return NextResponse.json({

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { onBillsGenerated } from "@/lib/kas/hooks";
 
 export async function POST(req: Request) {
   try {
@@ -235,6 +236,8 @@ export async function POST(req: Request) {
           .eq("id", master.id);
       }
     }
+
+    await onBillsGenerated(communityId, createdBills);
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { onLetterRequested, onLetterStatusChanged } from "@/lib/surat/hooks";
 
 export async function GET(req: Request) {
   try {
@@ -101,6 +102,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    await onLetterRequested(data).catch((e) => console.error("onLetterRequested:", e));
+
     return NextResponse.json({ success: true, request: data });
   } catch (err: any) {
     console.error("API /api/surat/requests POST error:", err);
@@ -172,6 +175,8 @@ export async function PATCH(req: Request) {
       console.error("Update letter request status error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    await onLetterStatusChanged(data).catch((e) => console.error("onLetterStatusChanged:", e));
 
     return NextResponse.json({ success: true, request: data });
   } catch (err: any) {

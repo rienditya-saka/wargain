@@ -787,6 +787,14 @@ async def predict(request: PredictRequest):
         score = float(np.mean(scores)) if scores else 0.85
 
         doc_type = (request.document_type or "ktp").lower()
+        if doc_type == "plate":
+            # ANPR: plate parsing happens in the Next.js API; return raw lines only.
+            return {
+                "success": True,
+                "data": {"documentType": "PLATE", "rawLines": lines, "confidence": score},
+                "source": "native_paddle_ocr_docker",
+                "latency_ms": round((time.time() - start_time) * 1000, 1),
+            }
         if doc_type == "kk":
             parsed = parse_kk_dynamic(lines, score, raw_items=raw_items)
         else:

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import "leaflet/dist/leaflet.css";
+import { addBaseLayer } from "@/lib/map-tiles";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Users, Phone, Building, ShieldCheck, Home } from "lucide-react";
 
@@ -93,10 +94,7 @@ export function KependudukanLeafletMap({
           attributionControl: false,
         });
 
-        // 100% Reliable CartoDB Basemap
-        L.tileLayer("https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png", {
-          maxZoom: 19,
-        }).addTo(map);
+        addBaseLayer(L, map, "light");
 
         L.control.zoom({ position: "bottomright" }).addTo(map);
 

@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { getClientSession } from "@/lib/auth-session";
 import { SignaturePad } from "@/components/ui/signature-pad";
 import { DocumentBuilder } from "@/components/surat/document-builder";
@@ -638,6 +639,7 @@ export default function SuratPage() {
               <FileText className="w-3 h-3 mr-1" /> Layanan Surat RT
             </Badge>
 
+            <NotificationBell userId={session?.userId} />
             <ThemeToggle />
           </div>
         </div>

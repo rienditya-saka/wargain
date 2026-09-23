@@ -20,7 +20,9 @@ import {
   ChevronRight,
   Home,
   Bell,
-  Menu
+  Menu,
+  ShieldAlert,
+  HeartHandshake
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SessionTenant } from "@/lib/types/auth";
@@ -119,9 +121,25 @@ export function AppSidebar({
       filterValue: "COMMERCE",
     },
     {
+      id: "sosial",
+      label: "Kegiatan Sosial",
+      href: "/sosial",
+      icon: HeartHandshake,
+      badge: "Posyandu",
+      badgeVariant: "secondary",
+    },
+    {
+      id: "keamanan",
+      label: "Keamanan Lingkungan",
+      href: "/keamanan",
+      icon: ShieldAlert,
+      badge: "Ronda",
+      badgeVariant: "secondary",
+    },
+    {
       id: "sos",
       label: "Tombol SOS / Darurat",
-      href: "/dashboard",
+      href: "/keamanan?tab=darurat",
       icon: AlertTriangle,
       badge: "SIAGA",
       badgeVariant: "destructive",

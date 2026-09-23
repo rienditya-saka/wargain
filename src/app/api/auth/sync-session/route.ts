@@ -78,6 +78,8 @@ export async function POST(req: Request) {
           isTenantActive,
           planTier: meta.planTier || "RT_STANDARD",
           planStatus,
+          citizenId: meta.citizenId ?? null,
+          houseBlock: meta.houseBlock ?? null,
         };
 
         return NextResponse.json({
@@ -105,6 +107,8 @@ export async function POST(req: Request) {
       isTenantActive: communityRow?.isActive ?? false,
       planTier: communityRow?.planTier || "RT_STANDARD",
       planStatus: communityRow?.planStatus || "PENDING_PAYMENT",
+      citizenId: userRow?.citizenId ?? null,
+      houseBlock: userRow?.houseBlock ?? null,
     };
 
     // Update raw_user_meta_data in Auth if synced

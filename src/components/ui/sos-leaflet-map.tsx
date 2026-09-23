@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import "leaflet/dist/leaflet.css";
+import { addBaseLayer } from "@/lib/map-tiles";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, MapPin, ShieldAlert, Radio } from "lucide-react";
 
@@ -74,10 +75,7 @@ export function SOSLeafletMap({ sosActive, activeReport }: SOSLeafletMapProps) {
           attributionControl: false,
         });
 
-        // 100% Reliable Dark Tile Layer without API Key restrictions or subdomains mismatch
-        L.tileLayer("https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png", {
-          maxZoom: 19,
-        }).addTo(map);
+        addBaseLayer(L, map, "dark");
 
         L.control.zoom({ position: "bottomright" }).addTo(map);
 

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-provider";
@@ -25,6 +25,9 @@ export const metadata: Metadata = {
     "Aplikasi Tetangga",
   ],
   authors: [{ name: "Sarana Kreasi Digital" }],
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "WargaIn", statusBarStyle: "black-translucent" },
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
   openGraph: {
     title: "WargaIn — Bikin Lingkungan Tetangga Rukun, Transparan, & Nggak Ribet",
     description:
@@ -34,6 +37,10 @@ export const metadata: Metadata = {
     locale: "id_ID",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#059669",
 };
 
 export default function RootLayout({

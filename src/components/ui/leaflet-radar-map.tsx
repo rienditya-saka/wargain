@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import "leaflet/dist/leaflet.css";
+import { addBaseLayer } from "@/lib/map-tiles";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, ShoppingBag, Store, Phone } from "lucide-react";
 
@@ -72,10 +73,7 @@ export function LeafletRadarMap({
           attributionControl: false,
         });
 
-        // 100% Reliable Dark Tiles without watermark or CORS issues
-        L.tileLayer("https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png", {
-          maxZoom: 19,
-        }).addTo(map);
+        addBaseLayer(L, map, "dark");
 
         L.control.zoom({ position: "bottomright" }).addTo(map);
 
