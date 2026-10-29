@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AppSheet } from "@/components/ui/app-sheet";
 import { toast } from "sonner";
 import {
   X, MapPin, Clock, CalendarDays, Users, Share2, Phone, Sparkles, CheckCircle2, Search, UserPlus,
@@ -58,31 +58,18 @@ export function EventDetail({
     if (open) setTab("INFO");
   }, [open, event?.id]);
 
-  React.useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
   return (
-    <AnimatePresence>
-      {open && event && (
-        <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]" />
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 280 }}
-            className="fixed z-50 inset-x-0 bottom-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[720px] max-h-[92vh] md:max-h-[88vh] rounded-t-3xl md:rounded-3xl bg-white dark:bg-[#0F1A13] shadow-2xl flex flex-col overflow-hidden"
-            role="dialog"
-            aria-modal="true"
-            aria-label={event.title}
-          >
+    <AppSheet
+      open={open && !!event}
+      onClose={onClose}
+      size="lg"
+      ariaLabel={event?.title}
+      header={
+        event && (
+          <>
             <Hero event={event} onClose={onClose} />
             {isPengurus && (
-              <div className="px-4 pt-3">
+              <div className="px-4 pt-3 pb-1">
                 <Segmented
                   value={tab}
                   onChange={setTab}
@@ -90,17 +77,17 @@ export function EventDetail({
                 />
               </div>
             )}
-            <div className="flex-1 overflow-y-auto overscroll-contain">
-              {tab === "INFO" ? (
-                <InfoTab event={event} userId={userId} household={household} householdRegs={householdRegs} onChanged={onChanged} />
-              ) : (
-                <ParticipantsTab event={event} userId={userId} communityId={communityId} onChanged={onChanged} />
-              )}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+          </>
+        )
+      }
+    >
+      {event &&
+        (tab === "INFO" ? (
+          <InfoTab event={event} userId={userId} household={household} householdRegs={householdRegs} onChanged={onChanged} />
+        ) : (
+          <ParticipantsTab event={event} userId={userId} communityId={communityId} onChanged={onChanged} />
+        ))}
+    </AppSheet>
   );
 }
 
@@ -110,7 +97,6 @@ function Hero({ event, onClose }: { event: SocialEvent; onClose: () => void }) {
     <div className={`relative shrink-0 bg-gradient-to-br ${meta.tone} text-white px-5 pt-4 pb-5 overflow-hidden`}>
       {event.coverUrl && <img src={event.coverUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />}
       <span className="absolute -right-4 -bottom-8 text-[110px] opacity-15 select-none" aria-hidden>{meta.emoji}</span>
-      <div className="w-10 h-1 rounded-full bg-white/50 mx-auto mb-3 md:hidden" />
       <button onClick={onClose} className="absolute top-3 right-3 w-9 h-9 rounded-xl bg-black/20 hover:bg-black/30 flex items-center justify-center" aria-label="Tutup">
         <X className="w-4 h-4" />
       </button>

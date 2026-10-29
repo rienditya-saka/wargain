@@ -1,5 +1,6 @@
 "use client";
 
+import { AppSheet } from "@/components/ui/app-sheet";
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1254,15 +1255,9 @@ export default function SuratPage() {
       {/* ======================================================== */}
       {/* MODAL 0: LIVE TEMPLATE PREVIEW (PRATINJAU FORMAT SURAT) */}
       {/* ======================================================== */}
-      <AnimatePresence>
+      <AppSheet open={!!previewingTemplate} onClose={() => setPreviewingTemplate(null)} size="xl" hideTitleBar>
         {previewingTemplate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-2xl bg-white text-slate-900 rounded-3xl shadow-2xl p-6 sm:p-10 border border-neutral-200 font-serif leading-relaxed text-xs sm:text-sm space-y-6 relative my-auto max-h-[90vh] overflow-y-auto"
-            >
+        <div className="p-6 sm:p-10 space-y-6">
               {/* Header Bar inside modal */}
               <div className="flex items-center justify-between border-b pb-3 font-sans">
                 <div className="flex items-center gap-2">
@@ -1375,23 +1370,16 @@ export default function SuratPage() {
                   <Plus className="w-4 h-4" /> Ajukan Surat Ini Sekarang
                 </Button>
               </div>
-            </motion.div>
-          </div>
+            </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
 
       {/* ======================================================== */}
       {/* MODAL 1: PENGAJUAN SURAT WARGA (MOBILE FIRST) */}
       {/* ======================================================== */}
-      <AnimatePresence>
+      <AppSheet open={!!isSubmitModalOpen} onClose={() => setIsSubmitModalOpen(false)} size="lg" hideTitleBar>
         {isSubmitModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              className="w-full sm:max-w-xl max-h-[90vh] bg-card rounded-t-3xl sm:rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden"
-            >
+        <div>
               {/* Modal Header */}
               <div className="px-5 py-4 border-b border-border bg-muted/40 flex items-center justify-between">
                 <div>
@@ -1412,7 +1400,7 @@ export default function SuratPage() {
               </div>
 
               {/* Modal Body */}
-              <form onSubmit={handleSubmitRequest} className="p-5 overflow-y-auto space-y-4 flex-1">
+              <form onSubmit={handleSubmitRequest} className="p-5 space-y-4">
                 {/* Auto-fill Info */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div className="space-y-1">
@@ -1556,23 +1544,16 @@ export default function SuratPage() {
                   </Button>
                 </div>
               </form>
-            </motion.div>
-          </div>
+            </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
 
       {/* ======================================================== */}
       {/* MODAL 2: REVIEW & TANDA TANGAN KETUA RT (APPROVAL) */}
       {/* ======================================================== */}
-      <AnimatePresence>
+      <AppSheet open={!!selectedRequestForApproval} onClose={() => setSelectedRequestForApproval(null)} size="lg" hideTitleBar>
         {selectedRequestForApproval && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              className="w-full sm:max-w-2xl max-h-[92vh] bg-card rounded-t-3xl sm:rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden"
-            >
+        <div>
               {/* Header */}
               <div className="px-5 py-4 border-b border-border bg-muted/40 flex items-center justify-between">
                 <div>
@@ -1593,7 +1574,7 @@ export default function SuratPage() {
               </div>
 
               {/* Body */}
-              <div className="p-5 overflow-y-auto space-y-4 flex-1">
+              <div className="p-5 space-y-4">
                 {isRejecting ? (
                   <div className="space-y-3">
                     <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-600">
@@ -1702,23 +1683,16 @@ export default function SuratPage() {
                   </div>
                 )}
               </div>
-            </motion.div>
-          </div>
+            </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
 
       {/* ======================================================== */}
       {/* MODAL 3: CETAK SURAT RESMI (A4 READY-TO-PRINT) */}
       {/* ======================================================== */}
-      <AnimatePresence>
+      <AppSheet open={!!selectedRequestForPrint} onClose={() => setSelectedRequestForPrint(null)} size="xl" hideTitleBar>
         {selectedRequestForPrint && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/75 backdrop-blur-sm overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-2xl bg-white text-slate-900 rounded-2xl shadow-2xl p-6 sm:p-10 border border-neutral-300 font-serif leading-relaxed text-xs sm:text-sm space-y-6 relative my-auto"
-            >
+        <div className="p-6 sm:p-10 space-y-6">
               {/* Close & Print Buttons (Screen Only) */}
               <div className="flex items-center justify-between border-b pb-3 print:hidden">
                 <div className="flex items-center gap-2">
@@ -1881,10 +1855,9 @@ export default function SuratPage() {
                   <span>ID: {selectedRequestForPrint.id}</span>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
 
       {/* 3. EPIC FLOATING MOBILE BOTTOM NAVIGATION BAR (md:hidden) */}
       <nav

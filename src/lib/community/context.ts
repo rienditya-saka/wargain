@@ -29,7 +29,7 @@ export interface CommunityContext {
   usersByHouse: Map<string, UserRow[]>;
 }
 
-export const blockKey = (b?: string | null) => (b ?? "").toUpperCase().replace(/^BLOK\s*/, "").replace(/\s+/g, "");
+export const blockKey = (b?: string | null) => (b ?? "").trim().toUpperCase().replace(/^BLOK\s*/, "").replace(/\s+/g, "");
 
 // Households are matched by house id (via the linked resident). Block text is only a fallback,
 // because different house records can share the same block label.

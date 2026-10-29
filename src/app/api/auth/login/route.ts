@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         errorMessage.toLowerCase().includes("invalid login credentials") ||
         errorMessage.toLowerCase().includes("invalid_grant")
       ) {
-        errorMessage = "Email atau kata sandi Supabase Anda tidak valid.";
+        errorMessage = "Email atau kata sandi salah. Coba periksa lagi.";
       }
       return NextResponse.json(
         { error: errorMessage },

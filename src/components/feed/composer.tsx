@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AppSheet } from "@/components/ui/app-sheet";
 import { toast } from "sonner";
 import { X, ImagePlus, Megaphone, ShoppingBag, MessageSquareWarning, PenLine, Pin } from "lucide-react";
 import { fileToResizedDataUrl } from "@/lib/keamanan/store";
@@ -92,29 +92,25 @@ export function Composer({
   const current = TYPES.find((t) => t.id === type)!;
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]" />
-          <motion.form
-            onSubmit={submit}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 280 }}
-            className="fixed z-50 inset-x-0 bottom-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[560px] max-h-[92vh] rounded-t-3xl md:rounded-3xl bg-white dark:bg-[#0F1A13] shadow-2xl flex flex-col"
-            role="dialog"
-            aria-label="Buat post"
-          >
-            <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-neutral-100 dark:border-neutral-800">
-              <div className="w-10 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700 absolute left-1/2 -translate-x-1/2 top-2 md:hidden" />
-              <p className="text-sm font-extrabold pt-2 md:pt-0">Buat Post</p>
-              <button type="button" onClick={onClose} className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Tutup">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+    <AppSheet
+      open={open}
+      onClose={onClose}
+      onSubmit={submit}
+      title="Buat Post"
+      ariaLabel="Buat post"
+      footer={
+        <div className="flex items-center justify-between gap-2">
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={images.length >= 4} className="min-h-[40px] px-3 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 flex items-center gap-1.5 disabled:opacity-40">
+            <ImagePlus className="w-4 h-4" /> Foto ({images.length}/4)
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" multiple onChange={addImages} className="hidden" />
+          <button type="submit" disabled={sending} className="min-h-[42px] px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black disabled:opacity-50">
+            {sending ? "Mengirim..." : "Posting"}
+          </button>
+        </div>
+      }
+    >
+            <div className="px-4 py-3 space-y-3">
               <div className="grid grid-cols-4 gap-1.5">
                 {TYPES.filter((t) => !t.pengurusOnly || isPengurus).map((t) => {
                   const Icon = t.icon;
@@ -185,18 +181,6 @@ export function Composer({
               {type === "REPORT" && <p className="text-[11px] text-slate-500">Aduan tampil di feed & dikirim ke pengurus RT untuk ditindaklanjuti.</p>}
             </div>
 
-            <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-neutral-100 dark:border-neutral-800 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <button type="button" onClick={() => fileRef.current?.click()} disabled={images.length >= 4} className="min-h-[40px] px-3 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 flex items-center gap-1.5 disabled:opacity-40">
-                <ImagePlus className="w-4 h-4" /> Foto ({images.length}/4)
-              </button>
-              <input ref={fileRef} type="file" accept="image/*" multiple onChange={addImages} className="hidden" />
-              <button type="submit" disabled={sending} className="min-h-[42px] px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black disabled:opacity-50">
-                {sending ? "Mengirim..." : "Posting"}
-              </button>
-            </div>
-          </motion.form>
-        </>
-      )}
-    </AnimatePresence>
+    </AppSheet>
   );
 }

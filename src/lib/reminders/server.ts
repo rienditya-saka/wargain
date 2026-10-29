@@ -5,6 +5,7 @@ import { describeWhen, eventLink, insertNotifications } from "@/lib/sosial/serve
 import { CATEGORY_META } from "@/lib/sosial/types";
 import { loadChildren } from "@/lib/kms/server";
 import { VACCINE_BY_CODE } from "@/lib/kms/immunization";
+import { runMeetingReminders } from "@/lib/balai/server";
 
 // Scheduled reminders, triggered by pg_cron -> pg_net -> /api/cron/reminders.
 // Every reminder has a deterministic id / dedupeKey, so re-runs (or overlapping runs) never double-send.
@@ -41,7 +42,9 @@ export async function runEventReminders(now = new Date()) {
     .gte("startAt", now.toISOString())
     .lte("startAt", new Date(now.getTime() + EVENT_WINDOW_MS).toISOString());
   if (error) throw new Error(`events: ${error.message}`);
-  if (!events?.length) return { events: 0, sent: 0 };
+  const bookings = await runBookingReminders(now);
+  const balai = await runMeetingReminders(now);
+  if (!events?.length) return { events: 0, sent: 0, bookings, balai };
 
   const { data: regs } = await supabaseAdmin
     .from("social_event_registrations")
@@ -88,7 +91,43 @@ export async function runEventReminders(now = new Date()) {
     }
     sent += await insertNotifications(rows);
   }
-  return { events: events.length, sent };
+  return { events: events.length, sent, bookings, balai };
+}
+
+// Pasar Warga: H-1 reminder for confirmed bookings / pre-order pickups, to buyer and seller.
+async function runBookingReminders(now: Date) {
+  const { data: orders } = await supabaseAdmin
+    .from("shop_orders")
+    .select("id, communityId, orderNumber, type, buyerId, buyerName, buyerBlock, items, scheduledAt, fulfillment, shop:shops(name, ownerId, houseBlock)")
+    .in("status", ["DIKONFIRMASI", "DIPROSES", "SIAP"])
+    .gte("scheduledAt", now.toISOString())
+    .lte("scheduledAt", new Date(now.getTime() + EVENT_WINDOW_MS).toISOString());
+  let sent = 0;
+  const today = jakartaDay(now);
+  for (const o of (orders ?? []) as any[]) {
+    const when = `${jakartaDay(new Date(o.scheduledAt)) === today ? "hari ini" : "besok"} ${new Date(o.scheduledAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: TZ })}`;
+    const what = o.items?.map((i: any) => i.name).join(", ");
+    const label = o.type === "JASA" ? "Booking" : "Pengambilan pre-order";
+    sent += await notify({
+      communityId: o.communityId, type: "PASAR_BOOKING_REMINDER", entity: { type: "ORDER", id: o.id },
+      title: `⏰ ${label} ${when}: ${what}`,
+      body: `${o.shop?.name ?? "Lapak"}${o.fulfillment === "KE_RUMAH" ? " akan datang ke rumah Anda" : o.shop?.houseBlock ? ` · ${o.shop.houseBlock}` : ""} · ${o.orderNumber}`,
+      link: `/pasar?tab=pesanan&order=${o.id}`,
+      target: { userIds: [o.buyerId] },
+      dedupeKey: `booking:${o.id}:buyer`,
+    });
+    if (o.shop?.ownerId) {
+      sent += await notify({
+        communityId: o.communityId, type: "PASAR_BOOKING_REMINDER", entity: { type: "ORDER", id: o.id },
+        title: `⏰ ${label} ${when}: ${o.buyerName}${o.buyerBlock ? ` (${o.buyerBlock})` : ""}`,
+        body: `${what} · ${o.orderNumber}`,
+        link: `/pasar?tab=lapak&order=${o.id}`,
+        target: { userIds: [o.shop.ownerId] },
+        dedupeKey: `booking:${o.id}:seller`,
+      });
+    }
+  }
+  return sent;
 }
 
 // Daily: parents of children with doses due / overdue. Overdue doses are repeated weekly.

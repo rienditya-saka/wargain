@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { AppSheet } from "@/components/ui/app-sheet";
 import { toast } from "sonner";
 import Link from "next/link";
 import { CalendarDays, MapPinned, ScanLine, UserCheck, Repeat, Plus, Receipt } from "lucide-react";
@@ -345,18 +346,24 @@ function AddShiftButton({ update }: { update: KeamananUpdater }) {
     toast.success("Jadwal ronda ditambahkan.");
   };
 
-  if (!open) {
-    return (
+  return (
+    <>
       <button onClick={() => setOpen(true)} className="h-9 px-3 rounded-xl bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 shrink-0">
         <Plus className="w-3.5 h-3.5" /> Jadwal
       </button>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#131F17] p-5 space-y-3" onClick={(e) => e.stopPropagation()}>
-        <h4 className="font-extrabold text-sm">Tambah Jadwal Ronda</h4>
+      <AppSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Tambah Jadwal Ronda"
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setOpen(false)} className="min-h-[40px] px-4 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-bold">Batal</button>
+            <button onClick={save} className="min-h-[40px] px-4 rounded-xl bg-emerald-600 text-white text-xs font-bold">Simpan</button>
+          </div>
+        }
+      >
+      <div className="p-4 space-y-3">
         <Field label="Tanggal">
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
         </Field>
@@ -366,12 +373,9 @@ function AddShiftButton({ update }: { update: KeamananUpdater }) {
         <Field label="Anggota (format: Nama / Blok, pisahkan koma)">
           <input value={members} onChange={(e) => setMembers(e.target.value)} placeholder="Pak Joko / B-11, Mas Dimas / C-09" className={inputClass} />
         </Field>
-        <div className="flex justify-end gap-2 pt-1">
-          <button onClick={() => setOpen(false)} className="min-h-[40px] px-4 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-bold">Batal</button>
-          <button onClick={save} className="min-h-[40px] px-4 rounded-xl bg-emerald-600 text-white text-xs font-bold">Simpan</button>
-        </div>
       </div>
-    </div>
+      </AppSheet>
+    </>
   );
 }
 

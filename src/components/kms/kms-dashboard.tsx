@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Search, X, AlertTriangle, TrendingDown, Syringe, Ruler, Scale, Users } from "lucide-react";
+import { AppSheet } from "@/components/ui/app-sheet";
+import { Search, AlertTriangle, TrendingDown, Syringe, Ruler, Scale, Users } from "lucide-react";
 import { useKmsDashboard } from "@/lib/kms/client";
 import type { ChildKms } from "@/lib/kms/types";
 import { VACCINE_BY_CODE } from "@/lib/kms/immunization";
@@ -137,27 +137,13 @@ export function KmsDashboard({ communityId, userId }: { communityId: string; use
         Standar WHO Child Growth Standards 2006 & klasifikasi Permenkes No. 2/2020. N/T memakai KBM Permenkes 155/2010. Alat bantu pantau untuk kader; diagnosis tetap oleh tenaga kesehatan.
       </p>
 
-      <AnimatePresence>
+      <AppSheet open={!!open} onClose={() => setOpen(null)} title="Kartu Menuju Sehat (KMS)" size="lg">
         {open && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(null)} className="fixed inset-0 z-50 bg-black/60" />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 280 }}
-              className="fixed z-50 inset-x-0 bottom-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[560px] max-h-[92vh] overflow-y-auto rounded-t-3xl md:rounded-3xl bg-white dark:bg-[#0F1A13] shadow-2xl"
-            >
-              <div className="sticky top-0 z-10 flex justify-end p-2 bg-white/80 dark:bg-[#0F1A13]/80 backdrop-blur">
-                <button onClick={() => setOpen(null)} className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Tutup"><X className="w-4 h-4" /></button>
-              </div>
-              <div className="px-3 pb-4 -mt-2">
-                <KmsCard child={open} userId={userId} canEdit onChanged={reload} />
-              </div>
-            </motion.div>
-          </>
+          <div className="px-3 py-3">
+            <KmsCard child={open} userId={userId} canEdit onChanged={reload} />
+          </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
     </div>
   );
 }

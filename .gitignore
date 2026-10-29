@@ -43,3 +43,8 @@ supabase/.temp/
 
 # generated login credentials (never commit)
 credentials/
+
+# test artifacts
+/tests/report/
+/tests/results/
+/tests/e2e/.auth/

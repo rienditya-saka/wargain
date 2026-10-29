@@ -1,0 +1,20 @@
+// Kartu Warga Digital checks. Usage: node --env-file=.env.local scratch/test-kartu.mjs [baseUrl]
+import { createClient } from "@supabase/supabase-js";
+const BASE = process.argv[2] ?? "http://localhost:4001";
+const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } });
+const { data: users } = await sb.from("users").select("id, email, role").eq("communityId", "comm_1789889738300");
+const demo = users.find((u) => u.email === "warga@demo.wargain.id");
+const ketua = users.find((u) => u.role === "KETUA");
+const j = (p) => fetch(`${BASE}/api/kartu?${p}`).then((r) => r.json());
+const check = (l, ok, x = "") => console.log(`${ok ? "✓" : "✗"} ${l}${x ? ` — ${x}` : ""}`);
+const mine = await j(`userId=${demo.id}`);
+check("Kartu saya", !!mine.token, `${mine.card.fullName} · ${mine.card.houseBlock} · ${mine.card.members.length} anggota KK`);
+const ok = await j(`token=${mine.token}&viewerId=${ketua.id}`);
+check("Verifikasi QR hari ini valid", ok.valid === true);
+const [uid, day, sig] = Buffer.from(mine.token, "base64url").toString().split(".");
+const forged = Buffer.from(`${ketua.id}.${day}.${sig}`).toString("base64url");
+check("QR dipalsukan ditolak", (await j(`token=${forged}&viewerId=${ketua.id}`)).valid === false);
+const old = Buffer.from(`${uid}.2026-01-01.${sig}`).toString("base64url");
+check("QR tanggal lain ditolak", (await j(`token=${old}&viewerId=${ketua.id}`)).valid === false);
+const anon = await fetch(`${BASE}/api/kartu?token=${mine.token}`);
+check("Verifikasi tanpa login ditolak", anon.status === 401);

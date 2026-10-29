@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Menu, Plus, Rss, Megaphone, HeartHandshake, ShieldAlert, ShoppingBag, ArrowUp, CalendarHeart, Siren, FileText, Wallet,
   ChevronRight, MessageSquareWarning, ImagePlus, Sparkles,
+  Vote,
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -26,6 +27,7 @@ const DEFAULT_COMMUNITY_ID = "comm_1789889738300";
 const FILTER_ICONS: Record<FeedFilterKey, React.ElementType> = {
   ALL: Rss,
   ANNOUNCEMENT: Megaphone,
+  BALAI: Vote,
   EVENT: HeartHandshake,
   SECURITY: ShieldAlert,
   COMMERCE: ShoppingBag,

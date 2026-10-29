@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Phone, Wallet, CheckCircle2, AlertCircle } from "lucide-react";
 import type { FeedPost } from "@/lib/feed/types";
 import { SocialEventFeedBody } from "@/components/sosial/feed-renderer";
+import { FundraiserFeedBody, KabarFeedBody, MeetingFeedBody, PollFeedBody } from "@/components/balai/feed-renderers";
 import { DisasterFeedBody, LostFoundFeedBody, SecurityAlertFeedBody } from "@/components/keamanan/feed-renderers";
 
 // Post body renderers, keyed by feed_posts.type. A new module adds its renderer here;
@@ -43,7 +44,7 @@ function AnnouncementBody({ post }: { post: FeedPost }) {
 }
 
 function CommerceBody({ post }: { post: FeedPost }) {
-  const p = post.payload as { price?: number; contactPhone?: string; itemCategory?: string };
+  const p = post.payload as { price?: number; contactPhone?: string; itemCategory?: string; productId?: string; shopName?: string; unit?: string; comparePrice?: number | null; productType?: string };
   const wa = p.contactPhone
     ? `https://wa.me/${p.contactPhone.replace(/\D/g, "").replace(/^0/, "62")}?text=${encodeURIComponent(`Halo, saya tertarik dengan "${post.title ?? "produk"}" di WargaIn.`)}`
     : null;
@@ -55,13 +56,31 @@ function CommerceBody({ post }: { post: FeedPost }) {
           {post.title && <h3 className="text-base font-extrabold leading-snug">{post.title}</h3>}
           {p.itemCategory && <p className="text-[11px] text-slate-500">{p.itemCategory}</p>}
         </div>
-        {p.price != null && <p className="shrink-0 text-lg font-black text-emerald-600">Rp {Number(p.price).toLocaleString("id-ID")}</p>}
+        {p.price != null && (
+          <div className="shrink-0 text-right">
+            <p className="text-lg font-black text-emerald-600">Rp {Number(p.price).toLocaleString("id-ID")}{p.unit ? <span className="text-[11px] font-bold text-slate-500">/{p.unit}</span> : null}</p>
+            {p.comparePrice ? <p className="text-[11px] text-slate-400 line-through">Rp {Number(p.comparePrice).toLocaleString("id-ID")}</p> : null}
+          </div>
+        )}
       </div>
       {post.content && <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{post.content}</p>}
-      {wa && (
-        <a href={wa} target="_blank" rel="noopener noreferrer" className="min-h-[42px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5">
-          <Phone className="w-4 h-4" /> Chat penjual via WhatsApp
-        </a>
+      {p.productId ? (
+        <div className="grid grid-cols-2 gap-2">
+          <Link href={`/pasar?product=${encodeURIComponent(p.productId)}`} className="min-h-[42px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5">
+            {p.productType === "JASA" ? "Booking jadwal" : "Pesan sekarang"}
+          </Link>
+          {wa && (
+            <a href={wa} target="_blank" rel="noopener noreferrer" className="min-h-[42px] rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-bold flex items-center justify-center gap-1.5">
+              <Phone className="w-4 h-4" /> Tanya penjual
+            </a>
+          )}
+        </div>
+      ) : (
+        wa && (
+          <a href={wa} target="_blank" rel="noopener noreferrer" className="min-h-[42px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5">
+            <Phone className="w-4 h-4" /> Chat penjual via WhatsApp
+          </a>
+        )
       )}
     </div>
   );
@@ -103,6 +122,10 @@ export const FEED_RENDERERS: Record<string, FeedRenderer> = {
   LOST_FOUND: LostFoundFeedBody,
   DISASTER: DisasterFeedBody,
   KAS_INFO: KasInfoBody,
+  KABAR: KabarFeedBody,
+  POLL: PollFeedBody,
+  MEETING: MeetingFeedBody,
+  FUNDRAISER: FundraiserFeedBody,
 };
 
 export function renderFeedBody(post: FeedPost) {
@@ -120,4 +143,8 @@ export const TYPE_BADGE: Record<string, { label: string; tone: string }> = {
   LOST_FOUND: { label: "Hilang & Temuan", tone: "bg-violet-500/10 text-violet-700 dark:text-violet-300" },
   DISASTER: { label: "Siaga Bencana", tone: "bg-blue-500/10 text-blue-700 dark:text-blue-300" },
   KAS_INFO: { label: "Kas RT", tone: "bg-amber-500/10 text-amber-700 dark:text-amber-300" },
+  KABAR: { label: "Kabar Warga", tone: "bg-teal-500/10 text-teal-700 dark:text-teal-300" },
+  POLL: { label: "Polling", tone: "bg-violet-500/10 text-violet-700 dark:text-violet-300" },
+  MEETING: { label: "Musyawarah", tone: "bg-sky-500/10 text-sky-700 dark:text-sky-300" },
+  FUNDRAISER: { label: "Galang Dana", tone: "bg-rose-500/10 text-rose-700 dark:text-rose-300" },
 };

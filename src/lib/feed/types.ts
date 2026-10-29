@@ -10,6 +10,10 @@ export type FeedPostType =
   | "LOST_FOUND"
   | "DISASTER"
   | "KAS_INFO"
+  | "KABAR"
+  | "POLL"
+  | "MEETING"
+  | "FUNDRAISER"
   | (string & {});
 
 export interface FeedPost {
@@ -52,7 +56,8 @@ export interface FeedComment {
 // Tabs on the feed page map to post types.
 export const FEED_FILTERS = {
   ALL: { label: "Semua", types: null as FeedPostType[] | null },
-  ANNOUNCEMENT: { label: "Pengumuman", types: ["ANNOUNCEMENT", "DISASTER"] as FeedPostType[] },
+  ANNOUNCEMENT: { label: "Pengumuman", types: ["ANNOUNCEMENT", "DISASTER", "KABAR"] as FeedPostType[] },
+  BALAI: { label: "Musyawarah & Polling", types: ["POLL", "MEETING", "FUNDRAISER"] as FeedPostType[] },
   EVENT: { label: "Kegiatan", types: ["SOCIAL_EVENT"] as FeedPostType[] },
   SECURITY: { label: "Keamanan", types: ["SECURITY_ALERT", "LOST_FOUND", "DISASTER", "REPORT"] as FeedPostType[] },
   COMMERCE: { label: "Jual Beli", types: ["COMMERCE"] as FeedPostType[] },

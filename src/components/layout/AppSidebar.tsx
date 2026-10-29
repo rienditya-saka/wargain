@@ -22,7 +22,9 @@ import {
   Bell,
   Menu,
   ShieldAlert,
-  HeartHandshake
+  HeartHandshake,
+  Landmark,
+  IdCard
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SessionTenant } from "@/lib/types/auth";
@@ -90,6 +92,22 @@ export function AppSidebar({
       filterValue: "ANNOUNCEMENT",
     },
     {
+      id: "balai",
+      label: "Balai Warga",
+      href: "/balai",
+      icon: Landmark,
+      badge: "Polling",
+      badgeVariant: "secondary",
+    },
+    {
+      id: "kartu",
+      label: "Kartu Warga Digital",
+      href: "/kartu",
+      icon: IdCard,
+      badge: "QR",
+      badgeVariant: "outline",
+    },
+    {
       id: "surat",
       label: "Layanan Surat RT",
       href: "/surat",
@@ -114,11 +132,11 @@ export function AppSidebar({
     },
     {
       id: "commerce",
-      label: "Warga Commerce (Pasar)",
-      href: "/feed?filter=COMMERCE",
+      label: "Pasar Warga",
+      href: "/pasar",
       icon: ShoppingBag,
-      isFilter: true,
-      filterValue: "COMMERCE",
+      badge: "Baru",
+      badgeVariant: "secondary",
     },
     {
       id: "sosial",

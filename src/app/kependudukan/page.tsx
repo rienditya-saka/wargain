@@ -1,5 +1,6 @@
 "use client";
 
+import { AppSheet } from "@/components/ui/app-sheet";
 import React, { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -2265,24 +2266,9 @@ export default function KependudukanPage() {
       </main>
 
       {/* MODAL: Registrasi Unit / Rumah Klaster Baru (Mendukung Rumah Kosong & Pemilik Luar) */}
-      <AnimatePresence>
+      <AppSheet open={!!isAddHouseModalOpen} onClose={() => setIsAddHouseModalOpen(false)} size="lg" hideTitleBar>
         {isAddHouseModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsAddHouseModalOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2 }}
-              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0E1712] border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl p-6 z-10 space-y-6"
-            >
+        <div className="p-6 space-y-6">
               {/* Header */}
               <div className="flex items-start justify-between border-b border-neutral-200 dark:border-neutral-800 pb-4">
                 <div className="flex items-center gap-3">
@@ -2602,10 +2588,9 @@ export default function KependudukanPage() {
                   </Button>
                 </div>
               </form>
-            </motion.div>
-          </div>
+            </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
 
       {/* 3. EPIC FLOATING MOBILE BOTTOM NAVIGATION BAR (md:hidden) */}
       <nav

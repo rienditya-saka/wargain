@@ -1,5 +1,6 @@
 "use client";
 
+import { AppSheet } from "@/components/ui/app-sheet";
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -2826,15 +2827,9 @@ export default function KasFinancialPage() {
       {/* ======================================================== */}
       {/* MODAL 1: CREATE / EDIT MASTER BILLING */}
       {/* ======================================================== */}
-      <AnimatePresence>
+      <AppSheet open={!!isCreateMasterModalOpen} onClose={() => setIsCreateMasterModalOpen(false)} size="lg" hideTitleBar>
         {isCreateMasterModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              className="w-full sm:max-w-xl max-h-[90vh] bg-card rounded-t-3xl sm:rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden"
-            >
+        <div>
               <div className="px-5 py-4 border-b border-border bg-muted/40 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-extrabold text-foreground flex items-center gap-1.5">
@@ -2853,7 +2848,7 @@ export default function KasFinancialPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleSaveMasterBilling} className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
+              <form onSubmit={handleSaveMasterBilling} className="p-5 space-y-4 text-xs">
                 <div className="space-y-1">
                   <label className="font-semibold text-foreground">Nama Tagihan Lingkungan:</label>
                   <Input
@@ -3019,23 +3014,16 @@ export default function KasFinancialPage() {
                   </Button>
                 </div>
               </form>
-            </motion.div>
-          </div>
+            </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
 
       {/* ======================================================== */}
       {/* MODAL 2: CATAT PELUNASAN TAGIHAN (BENDAHARA) */}
       {/* ======================================================== */}
-      <AnimatePresence>
+      <AppSheet open={!!selectedBillForPayment} onClose={() => setSelectedBillForPayment(null)} size="md" hideTitleBar>
         {selectedBillForPayment && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden"
-            >
+        <div>
               <div className="px-5 py-4 border-b border-border bg-muted/40 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-extrabold text-foreground flex items-center gap-1.5">
@@ -3107,23 +3095,16 @@ export default function KasFinancialPage() {
                   </Button>
                 </div>
               </form>
-            </motion.div>
-          </div>
+            </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
 
       {/* ======================================================== */}
       {/* MODAL 3: KUITANSI PEMBAYARAN SAH (PRINT-READY) */}
       {/* ======================================================== */}
-      <AnimatePresence>
+      <AppSheet open={!!selectedBillForReceipt} onClose={() => setSelectedBillForReceipt(null)} size="lg" hideTitleBar>
         {selectedBillForReceipt && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-white text-slate-900 rounded-3xl shadow-2xl p-6 sm:p-8 border border-neutral-300 font-sans text-xs space-y-5 relative my-auto"
-            >
+        <div className="p-6 sm:p-8 space-y-5">
               <div className="flex items-center justify-between border-b pb-3 print:hidden">
                 <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 font-bold">
                   ✓ Kuitansi Pembayaran Sah
@@ -3222,23 +3203,16 @@ export default function KasFinancialPage() {
                   <p className="font-bold underline uppercase text-slate-900">( Pengurus RT 04 / RW 09 )</p>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
 
       {/* ======================================================== */}
       {/* MODAL 4: CATAT PENGELUARAN KAS MANUAL */}
       {/* ======================================================== */}
-      <AnimatePresence>
+      <AppSheet open={!!isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} size="md" hideTitleBar>
         {isExpenseModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden"
-            >
+        <div>
               <div className="px-5 py-4 border-b border-border bg-muted/40 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-extrabold text-foreground flex items-center gap-1.5">
@@ -3326,23 +3300,16 @@ export default function KasFinancialPage() {
                   </Button>
                 </div>
               </form>
-            </motion.div>
-          </div>
+            </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
 
       {/* ======================================================== */}
       {/* MODAL 5: KELOLA POS ANGGARAN & KATEGORI (INCOME/EXPENSE) */}
       {/* ======================================================== */}
-      <AnimatePresence>
+      <AppSheet open={!!isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} size="md" hideTitleBar>
         {isCategoryModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              className="w-full sm:max-w-xl bg-card rounded-t-3xl sm:rounded-3xl border border-border shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
-            >
+        <div>
               {/* Modal Header */}
               <div className="px-5 py-4 border-b border-border bg-muted/40 flex items-center justify-between">
                 <div>
@@ -3483,7 +3450,7 @@ export default function KasFinancialPage() {
               </div>
 
               {/* List Categories */}
-              <div className="p-4 overflow-y-auto max-h-[320px] space-y-2">
+              <div className="p-4 space-y-2">
                 <div className="flex items-center justify-between pb-1">
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Daftar Pos Terdaftar ({categories.filter((c) => c.type === categoryModalTab).length})
@@ -3584,10 +3551,9 @@ export default function KasFinancialPage() {
                   Selesai
                 </Button>
               </div>
-            </motion.div>
-          </div>
+            </div>
         )}
-      </AnimatePresence>
+      </AppSheet>
 
       {/* 3. FLOATING MOBILE BOTTOM NAVIGATION BAR */}
       <nav
