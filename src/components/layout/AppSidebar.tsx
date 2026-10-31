@@ -165,7 +165,7 @@ export function AppSidebar({
   ];
 
   const renderNavContent = () => (
-    <div className="flex flex-col justify-between h-full space-y-6">
+    <div className="flex flex-col justify-between min-h-full space-y-6 pb-3">
       <div className="space-y-5">
         {/* User & Community Profile Card */}
         <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-[#131F17] border border-neutral-200/80 dark:border-neutral-800/80 space-y-3">
@@ -284,7 +284,7 @@ export function AppSidebar({
   return (
     <>
       {/* 1. DESKTOP PERMANENT SIDEBAR (>= md / lg) */}
-      <aside className="hidden md:block md:w-72 shrink-0 sticky top-20 h-[calc(100vh-90px)] overflow-y-auto pr-2">
+      <aside className="hidden md:block md:w-72 shrink-0 self-start sticky top-20 h-[calc(100dvh-5.75rem)] overflow-y-auto overscroll-y-contain pr-2">
         {renderNavContent()}
       </aside>
 

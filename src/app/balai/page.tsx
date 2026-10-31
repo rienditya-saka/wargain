@@ -138,9 +138,9 @@ function BalaiContent() {
   const items = (data?.items ?? []).filter((i) => invCat === "SEMUA" || i.category === invCat);
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-28 md:pb-12 font-sans overflow-x-hidden">
-      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-28 md:pb-12 font-sans overflow-x-clip">
+      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 lg:px-6 py-2.5">
+        <div className="w-full flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <button onClick={() => setDrawer(true)} className="md:hidden w-9 h-9 rounded-xl border border-neutral-200 dark:border-neutral-800 flex items-center justify-center shrink-0" aria-label="Buka menu utama"><Menu className="w-5 h-5" /></button>
             <Link href="/feed" className="flex items-center gap-2 shrink-0">
@@ -160,8 +160,8 @@ function BalaiContent() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 md:py-6">
-        <div className="flex flex-col md:flex-row lg:gap-6 items-start">
+      <main className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-6">
+        <div className="flex flex-col md:flex-row md:gap-4 lg:gap-6 items-start">
           <AppSidebar session={session} isMobileDrawerOpen={drawer} onCloseMobileDrawer={() => setDrawer(false)} />
 
           <section className="flex-1 w-full min-w-0 space-y-4">

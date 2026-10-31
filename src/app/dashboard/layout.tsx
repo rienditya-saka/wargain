@@ -94,10 +94,10 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 flex flex-col font-sans overflow-x-clip">
       {/* 1. Header Top Navbar */}
-      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 lg:px-6 py-2.5">
+        <div className="w-full flex items-center justify-between gap-3">
           
           {/* Left: Burger Icon (Mobile) & Brand Logo */}
           <div className="flex items-center gap-2.5">
@@ -156,8 +156,8 @@ export default function DashboardLayout({
       </header>
 
       {/* 2. Main Content Wrapper */}
-      <div className="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full flex-1">
-        <div className="flex flex-col md:flex-row lg:gap-6 items-start w-full">
+      <div className="w-full px-4 lg:px-6 py-4 md:py-6 flex-1">
+        <div className="flex flex-col md:flex-row md:gap-4 lg:gap-6 items-start w-full">
           
           {/* Global Main Menu Sidebar */}
           <AppSidebar

@@ -1066,10 +1066,10 @@ export default function KependudukanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-28 md:pb-8 selection:bg-emerald-500 selection:text-white font-sans">
+    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-28 md:pb-8 selection:bg-emerald-500 selection:text-white font-sans overflow-x-clip">
       {/* 1. TOP HEADER NAVIGATION */}
-      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 lg:px-6 py-2.5">
+        <div className="w-full flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setIsMobileDrawerOpen(true)}
@@ -1115,8 +1115,8 @@ export default function KependudukanPage() {
       </header>
 
       {/* 2. MAIN LAYOUT WITH APP SIDEBAR */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 md:py-5">
-        <div className="flex flex-col md:flex-row lg:gap-5 items-start">
+      <main className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-5">
+        <div className="flex flex-col md:flex-row md:gap-4 lg:gap-5 items-start">
           <AppSidebar
             session={session}
             isMobileDrawerOpen={isMobileDrawerOpen}

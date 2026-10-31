@@ -237,9 +237,9 @@ function KeamananShell({
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-28 md:pb-12 font-sans overflow-x-hidden">
-      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-28 md:pb-12 font-sans overflow-x-clip">
+      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 lg:px-6 py-2.5">
+        <div className="w-full flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               onClick={() => setIsMobileDrawerOpen(true)}
@@ -268,8 +268,8 @@ function KeamananShell({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 md:py-6">
-        <div className="flex flex-col md:flex-row lg:gap-6 items-start">
+      <main className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-6">
+        <div className="flex flex-col md:flex-row md:gap-4 lg:gap-6 items-start">
           <AppSidebar session={session} isMobileDrawerOpen={isMobileDrawerOpen} onCloseMobileDrawer={() => setIsMobileDrawerOpen(false)} />
 
           <section className="flex-1 w-full space-y-3 sm:space-y-4 min-w-0">

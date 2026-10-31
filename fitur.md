@@ -93,6 +93,8 @@ Supabase `pg_cron` + `pg_net` memanggil `POST /api/cron/reminders` dengan header
 
 `/feed` adalah beranda warga.
 
+- **Navigasi & Layout Sticky:** Header atas, menu sidebar kiri (`AppSidebar` dengan scroll internal terpisah), sub-tab filter, serta panel pintasan/agenda kanan tetap menempel (*sticky*) di layar desktop/tablet saat konten utama digulir (menggunakan `overflow-x-clip` pada wrapper halaman agar tidak memutus konteks `position: sticky`).
+
 - **Filter:** Semua, Pengumuman (termasuk kabar warga), Musyawarah & Polling, Kegiatan, Keamanan, dan Jual Beli.
 - **Menulis post:** info umum, pengumuman (pengurus), jual-beli, dan aduan warga.
 - Suka, komentar, sematkan (pin), sembunyikan, dan tandai aduan "selesai ditangani".

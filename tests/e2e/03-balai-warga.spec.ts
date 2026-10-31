@@ -1,4 +1,4 @@
-import { expect, loginAs, test } from "./fixtures";
+import { expect, loginAs, seedActivePoll, test } from "./fixtures";
 
 // Balai Warga dari sisi warga (data demo dari scratch/seed-balai.mjs).
 test.describe("Balai Warga — warga", () => {
@@ -15,9 +15,11 @@ test.describe("Balai Warga — warga", () => {
     await expect(page.getByText(/Innalillahi/).first()).toBeVisible();
   });
 
-  test("Polling: vote / ubah pilihan lalu hasil tampil", async ({ page }) => {
+  test("Polling: vote / ubah pilihan lalu hasil tampil", async ({ page }, info) => {
+    const seeded = await seedActivePoll({ tag: `${info.project.name}-vote`, title: "Setuju iuran keamanan naik?", options: ["Setuju", "Tidak setuju"], voteScope: "HOUSE" });
+    try {
     await page.goto("/balai?tab=polling");
-    const card = page.locator('[id^="poll-"]').filter({ hasText: "iuran keamanan" });
+    const card = page.locator('[id^="poll-"]').filter({ hasText: seeded.title });
     await expect(card).toBeVisible();
     await expect(card.getByText("1 rumah 1 suara")).toBeVisible();
     const change = card.getByRole("button", { name: "Ubah pilihan" });
@@ -28,6 +30,9 @@ test.describe("Balai Warga — warga", () => {
     await expect(card.getByRole("button", { name: "Ubah pilihan" })).toBeVisible();
     await expect(card.getByText(/\d+%/).first()).toBeVisible();
     await expect(card.getByText(/dari \d+ rumah memilih/)).toBeVisible();
+    } finally {
+      await seeded.cleanup();
+    }
   });
 
   test("Polling: arsip hasil menampilkan pemenang", async ({ page }) => {

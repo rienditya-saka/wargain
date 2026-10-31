@@ -1,4 +1,4 @@
-import { apiLogin, expect, loginAs, test } from "./fixtures";
+import { apiLogin, expect, loginAs, seedActivePoll, test } from "./fixtures";
 
 test.describe("Kartu Warga Digital", () => {
   test("kartu saya menampilkan QR, nama & anggota KK", async ({ page }) => {
@@ -40,11 +40,16 @@ test.describe("Feed terhubung ke Balai Warga", () => {
     await expect(page.getByRole("link", { name: /Ikut berdonasi/ }).first()).toHaveAttribute("href", /\/balai\?tab=donasi&fund=/);
   });
 
-  test("polling bisa dijawab langsung dari Feed", async ({ page }) => {
-    await page.goto("/feed?filter=BALAI");
-    const poll = page.locator("div.rounded-2xl", { hasText: "🗳️ POLLING WARGA" }).filter({ hasText: "Acara 17-an" }).first();
-    await expect(poll).toBeVisible();
-    await expect(poll.getByRole("button", { name: /Kirim suara|Ubah pilihan/ })).toBeVisible();
+  test("polling bisa dijawab langsung dari Feed", async ({ page }, info) => {
+    const seeded = await seedActivePoll({ tag: `${info.project.name}-feed`, title: "Acara 17-an paling seru?", options: ["Lomba anak", "Jalan sehat"], maxChoices: 2 });
+    try {
+      await page.goto("/feed?filter=BALAI");
+      const poll = page.locator("div.rounded-2xl", { hasText: "🗳️ POLLING WARGA" }).filter({ hasText: seeded.title }).first();
+      await expect(poll).toBeVisible();
+      await expect(poll.getByRole("button", { name: /Kirim suara|Ubah pilihan/ })).toBeVisible();
+    } finally {
+      await seeded.cleanup();
+    }
   });
 
   test("filter Pengumuman memuat kabar warga", async ({ page }) => {

@@ -128,9 +128,9 @@ function FeedContent() {
   if (!ready) return null;
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-24 md:pb-10 font-sans overflow-x-hidden">
-      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-24 md:pb-10 font-sans overflow-x-clip">
+      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 lg:px-6 py-2.5">
+        <div className="w-full flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <button onClick={() => setDrawer(true)} className="md:hidden w-9 h-9 rounded-xl border border-neutral-200 dark:border-neutral-800 flex items-center justify-center shrink-0" aria-label="Buka menu utama">
               <Menu className="w-5 h-5 text-emerald-600" />
@@ -153,8 +153,8 @@ function FeedContent() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 md:py-6">
-        <div className="flex flex-col md:flex-row lg:gap-6 items-start">
+      <main className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-6">
+        <div className="flex flex-col md:flex-row md:gap-4 lg:gap-6 items-start">
           <AppSidebar
             session={session}
             isMobileDrawerOpen={drawer}
@@ -163,7 +163,7 @@ function FeedContent() {
             onSelectFilter={(f) => setFilter((FILTER_KEYS.includes(f as FeedFilterKey) ? f : "ALL") as FeedFilterKey)}
           />
 
-          <section className="flex-1 w-full min-w-0 max-w-2xl mx-auto space-y-3">
+          <section className="flex-1 w-full min-w-0 space-y-3">
             <nav className="sticky top-[57px] z-30 -mx-3 sm:mx-0 px-3 sm:px-0 py-1.5 bg-[#FBFBF9]/95 dark:bg-[#0B130E]/95 backdrop-blur" aria-label="Filter feed">
               <div className="flex gap-1 p-1 rounded-2xl bg-white dark:bg-[#131F17] border border-neutral-200/80 dark:border-neutral-800/80 overflow-x-auto no-scrollbar">
                 {FILTER_KEYS.map((k) => {
@@ -259,7 +259,7 @@ function FeedContent() {
             {!feed.loading && !feed.hasMore && list.length > 5 && <p className="text-center text-[11px] text-slate-400 py-4">Sudah sampai post paling awal ✨</p>}
           </section>
 
-          <aside className="hidden xl:block w-80 shrink-0 sticky top-20 space-y-3">
+          <aside className="hidden xl:block w-80 shrink-0 self-start sticky top-20 max-h-[calc(100dvh-5.75rem)] overflow-y-auto overscroll-y-contain space-y-3">
             <div className="rounded-2xl bg-white dark:bg-[#131F17] border border-neutral-200/80 dark:border-neutral-800/80 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-extrabold flex items-center gap-1.5"><CalendarHeart className="w-4 h-4 text-pink-500" /> Agenda Terdekat</p>

@@ -606,10 +606,10 @@ export default function SuratPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-28 md:pb-12 font-sans selection:bg-emerald-500 selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0B130E] text-slate-900 dark:text-slate-100 pb-28 md:pb-12 font-sans selection:bg-emerald-500 selection:text-white overflow-x-clip">
       {/* 1. TOP HEADER */}
-      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-40 bg-[#FBFBF9]/90 dark:bg-[#0B130E]/90 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 px-4 lg:px-6 py-2.5">
+        <div className="w-full flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setIsMobileDrawerOpen(true)}
@@ -647,8 +647,8 @@ export default function SuratPage() {
       </header>
 
       {/* 2. MAIN CONTENT LAYOUT CONTAINER (PROPER FLEX WITH SIDEBAR) */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 md:py-6">
-        <div className="flex flex-col md:flex-row lg:gap-6 items-start">
+      <main className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4 md:py-6">
+        <div className="flex flex-col md:flex-row md:gap-4 lg:gap-6 items-start">
           
           {/* REUSABLE GLOBAL APP SIDEBAR */}
           <AppSidebar
